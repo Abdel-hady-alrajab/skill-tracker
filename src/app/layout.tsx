@@ -15,14 +15,35 @@ const jetbrainsMono = JetBrains_Mono({
   variable: '--font-mono',
 })
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://skill-tracker.vercel.app'
+
 export const metadata: Metadata = {
-  title: 'Skill Tracker — Track every skill, build every habit',
+  metadataBase: new URL(siteUrl),
+  title: {
+    default: 'Skill Tracker — Track every skill, build every habit',
+    template: '%s — Skill Tracker',
+  },
   description:
     'A personal dashboard to track your learning progress across any skill — Quran, coding, languages and more. With streaks, coins, charts and heatmaps.',
+  alternates: {
+    canonical: '/',
+  },
   openGraph: {
-    title: 'Skill Tracker',
+    title: 'Skill Tracker — Track every skill, build every habit',
     description: 'Track every skill. Build every habit.',
+    url: siteUrl,
+    siteName: 'Skill Tracker',
     type: 'website',
+    locale: 'en_US',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Skill Tracker — Track every skill, build every habit',
+    description: 'Track every skill. Build every habit.',
+  },
+  robots: {
+    index: true,
+    follow: true,
   },
 }
 

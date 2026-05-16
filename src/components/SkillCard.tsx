@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import type { Skill } from '@/app/hooks/useSkills'
+import DeadlineBar from '@/components/DeadlineBar'
 
 // Color gradient map matching the original HTML app
 const BAR_GRADIENTS: Record<string, string> = {
@@ -14,10 +15,10 @@ const BAR_GRADIENTS: Record<string, string> = {
     pink: 'from-pink-900 to-pink-400',
 }
 
-interface DeadlineInfo {
+export interface DeadlineInfo {
     dateStr: string
     daysLeft: number
-    paceNeeded: string
+    paceNeeded: number
     done: boolean
 }
 
@@ -166,50 +167,15 @@ export default function SkillCard({
             {/* Deadline bar */}
             {deadlineUnlocked && (
                 <div className="mt-3">
-                    {deadlineInfo ? (
-                        <div className={`flex items-center justify-between flex-wrap gap-2 px-3 py-2 rounded-lg border text-xs font-mono ${deadlineInfo.done
-                            ? 'border-yellow-500/40 bg-yellow-500/8 text-yellow-400'
-                            : deadlineInfo.daysLeft < 0
-                                ? 'border-red-500/40 bg-red-500/8 text-red-400'
-                                : 'border-emerald-500/40 bg-emerald-500/8 text-emerald-400'
-                            }`}>
-                            <div>
-                                <span className="font-bold">
-                                    {deadlineInfo.done
-                                        ? 'Completed! 🎉'
-                                        : deadlineInfo.daysLeft < 0
-                                            ? `${Math.abs(deadlineInfo.daysLeft)} days overdue`
-                                            : `${deadlineInfo.daysLeft} days left`}
-                                </span>
-                                {' · '}
-                                <span className="text-slate-400">
-                                    {new Date(deadlineInfo.dateStr).toLocaleDateString('en-GB', {
-                                        day: 'numeric', month: 'short', year: 'numeric',
-                                    })}
-                                </span>
-                            </div>
-                            <div className="flex items-center gap-3">
-                                {!deadlineInfo.done && (
-                                    <span className="text-slate-400">
-                                        Need {deadlineInfo.paceNeeded} {skill.unit}/day
-                                    </span>
-                                )}
-                                <button
-                                    onClick={() => onRemoveDeadline(skill.id)}
-                                    className="text-slate-500 hover:text-red-400 transition-colors"
-                                >
-                                    ✕
-                                </button>
-                            </div>
-                        </div>
-                    ) : (
-                        <button
-                            onClick={() => onSetDeadline(skill.id)}
-                            className="text-blue-400 hover:text-blue-300 text-xs font-mono transition-colors"
-                        >
-                            + Set deadline
-                        </button>
-                    )}
+                    <DeadlineBar
+                        deadline={deadlineInfo?.dateStr ?? null}
+                        daysLeft={deadlineInfo?.daysLeft ?? 0}
+                        paceNeeded={deadlineInfo?.paceNeeded ?? 0}
+                        unit={skill.unit}
+                        done={deadlineInfo?.done ?? false}
+                        onRemove={() => onRemoveDeadline(skill.id)}
+                        onSetDeadline={() => onSetDeadline(skill.id)}
+                    />
                 </div>
             )}
         </div>
