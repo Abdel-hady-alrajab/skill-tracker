@@ -68,7 +68,11 @@ export default function Navbar({
                     <button
                         onClick={toggle}
                         title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
-                        className="text-slate-400 hover:text-white border border-slate-700 hover:border-slate-500 text-sm px-2.5 py-1.5 rounded-lg transition-all"
+                        className="border text-sm px-2.5 py-1.5 rounded-lg transition-all"
+                        style={{
+                            borderColor: theme === 'dark' ? '#475569' : '#94a3b8',
+                            color: theme === 'dark' ? '#94a3b8' : '#475569',
+                        }}
                     >
                         {theme === 'dark' ? '☀️' : '🌙'}
                     </button>

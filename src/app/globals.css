@@ -65,3 +65,7 @@ html.light .hover\:border-slate-500:hover { border-color: #64748b !important; }
 
 /* Dashed empty-state border */
 html.light .border-dashed { border-color: #cbd5e1 !important; }
+
+/* Disabled button states (CoinShop Buy buttons) */
+html.light .disabled\:bg-slate-700:disabled  { background-color: #e2e8f0 !important; }
+html.light .disabled\:text-slate-500:disabled { color: #94a3b8 !important; }
