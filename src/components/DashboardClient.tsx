@@ -1,0 +1,311 @@
+'use client'
+
+import { useState, useEffect, useRef } from 'react'
+import { createClient } from '@/lib/supabase/client'
+import { useSkills } from '@/app/hooks/useSkills'
+import type { Skill } from '@/app/hooks/useSkills'
+import { useUserStats } from '@/app/hooks/useUserStats'
+import { useActivityLog } from '@/app/hooks/useActivityLog'
+import { useIncrementLog } from '@/app/hooks/useIncrementLog'
+import { useMilestone } from '@/components/MilestonePop'
+import MilestonePop from '@/components/MilestonePop'
+import AddSkillModal from '@/components/AddSkillModal'
+import DeadlineModal from '@/components/DeadlineModal'
+import SkillCard from '@/components/SkillCard'
+import type { DeadlineInfo } from '@/components/SkillCard'
+import CoinShop from '@/components/CoinShop'
+import ActivityHeatmap from '@/components/HeatMap'
+import Charts from '@/components/Charts'
+import { checkMilestones, getMilestonesReached } from '@/lib/milestones'
+
+interface Props {
+    userId: string
+}
+
+export default function DashboardClient({ userId }: Props) {
+    const supabase = useRef(createClient()).current
+
+    const { skills, loading, addSkill, deleteSkill, updateCounter } = useSkills(userId)
+    const {
+        stats,
+        streakActive,
+        addCoins,
+        updateStreak,
+        buyFreeze,
+        buyBooster,
+        buyDeadlineTracker,
+        refetch: refetchStats,
+    } = useUserStats(userId)
+    const { log, logActivity } = useActivityLog(userId)
+    const { logIncrement, getWeeklyData } = useIncrementLog(userId)
+    const { data: milestoneData, visible: milestoneVisible, triggerMilestone } = useMilestone()
+
+    const [addSkillOpen, setAddSkillOpen] = useState(false)
+    const [deadlineModalOpen, setDeadlineModalOpen] = useState(false)
+    const [deadlineSkillId, setDeadlineSkillId] = useState<string | null>(null)
+    const [deadlines, setDeadlines] = useState<Record<string, string>>({})
+    const [prevCounters, setPrevCounters] = useState<Record<string, number>>({})
+    const [toast, setToast] = useState<string | null>(null)
+
+    // Load deadlines from DB whenever skills list changes
+    useEffect(() => {
+        if (!skills.length) return
+        supabase
+            .from('deadlines')
+            .select('skill_id, deadline_date')
+            .eq('user_id', userId)
+            .then(({ data }) => {
+                if (!data) return
+                const map: Record<string, string> = {}
+                data.forEach(row => { map[row.skill_id] = row.deadline_date })
+                setDeadlines(map)
+            })
+    }, [skills.length, userId, supabase])
+
+    function showToast(msg: string) {
+        setToast(msg)
+        setTimeout(() => setToast(null), 3500)
+    }
+
+    async function handleIncrement(skillId: string, amount: number) {
+        const skill = skills.find(s => s.id === skillId)
+        if (!skill) return
+
+        const newCounter = Math.min(skill.counter + amount, skill.total)
+        if (newCounter <= skill.counter) return
+
+        setPrevCounters(prev => ({ ...prev, [skillId]: skill.counter }))
+
+        await updateCounter(skillId, newCounter)
+        logActivity()
+        logIncrement(skillId, skill.name, amount)
+
+        const earned = await addCoins(1)
+        if (earned > 1) showToast(`⚡ Booster active! +${earned} 🪙`)
+
+        await updateStreak()
+
+        // Check milestones
+        const oldPct = (skill.counter / skill.total) * 100
+        const newPct = (newCounter / skill.total) * 100
+        const alreadyReached = await getMilestonesReached(userId, skillId, supabase)
+        const result = await checkMilestones(
+            userId, skillId, skill.name, oldPct, newPct, alreadyReached, supabase
+        )
+        if (result) {
+            triggerMilestone(result.icon, result.title, result.sub)
+            await refetchStats()
+        }
+    }
+
+    async function handleUndo(skillId: string) {
+        const prev = prevCounters[skillId]
+        if (prev === undefined) return
+        await updateCounter(skillId, prev)
+        setPrevCounters(p => {
+            const n = { ...p }
+            delete n[skillId]
+            return n
+        })
+    }
+
+    async function handleSaveDeadline(skillId: string, dateStr: string) {
+        await supabase
+            .from('deadlines')
+            .upsert(
+                { user_id: userId, skill_id: skillId, deadline_date: dateStr },
+                { onConflict: 'skill_id' }
+            )
+        setDeadlines(prev => ({ ...prev, [skillId]: dateStr }))
+        setDeadlineModalOpen(false)
+    }
+
+    async function handleRemoveDeadline(skillId: string) {
+        await supabase
+            .from('deadlines')
+            .delete()
+            .eq('skill_id', skillId)
+            .eq('user_id', userId)
+        setDeadlines(prev => {
+            const n = { ...prev }
+            delete n[skillId]
+            return n
+        })
+    }
+
+    function openDeadlineModal(skillId?: string) {
+        setDeadlineSkillId(skillId ?? null)
+        setDeadlineModalOpen(true)
+    }
+
+    function getDeadlineInfo(skill: Skill): DeadlineInfo | null {
+        const dateStr = deadlines[skill.id]
+        if (!dateStr) return null
+
+        const today = new Date()
+        today.setHours(0, 0, 0, 0)
+        const deadline = new Date(dateStr + 'T00:00:00')
+        const daysLeft = Math.ceil((deadline.getTime() - today.getTime()) / 86400000)
+        const remaining = skill.total - skill.counter
+        const done = skill.counter >= skill.total
+        const paceNeeded = daysLeft > 0 ? remaining / daysLeft : remaining
+
+        return { dateStr, daysLeft, paceNeeded, done }
+    }
+
+    // Aggregate stats
+    const totalUnits = skills.reduce((s, sk) => s + sk.total, 0)
+    const doneUnits = skills.reduce((s, sk) => s + sk.counter, 0)
+    const leftUnits = skills.reduce((s, sk) => s + Math.max(0, sk.total - sk.counter), 0)
+    const completedSkills = skills.filter(s => s.counter >= s.total).length
+    const overallPct = totalUnits > 0 ? (doneUnits / totalUnits) * 100 : 0
+
+    const activeSkills = skills.filter(s => s.counter < s.total)
+    const completedSkillsList = skills.filter(s => s.counter >= s.total)
+
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center py-32">
+                <span className="text-slate-500 font-mono text-sm animate-pulse">Loading…</span>
+            </div>
+        )
+    }
+
+    return (
+        <div className="space-y-6">
+
+            {/* Overall progress bar */}
+            <div className="bg-slate-800 border border-slate-700 rounded-xl p-5">
+                <div className="flex items-center justify-between mb-2 flex-wrap gap-2">
+                    <span className="text-sm font-bold">Overall Progress</span>
+                    <span className="text-xs font-mono text-slate-400">
+                        {overallPct.toFixed(1)}% across all skills
+                    </span>
+                </div>
+                <div className="bg-slate-900 rounded-full h-4 overflow-hidden">
+                    <div
+                        className="h-full rounded-full bg-gradient-to-r from-blue-700 to-blue-400 transition-all duration-700"
+                        style={{ width: `${overallPct}%` }}
+                    />
+                </div>
+            </div>
+
+            {/* Stat cards */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+                {[
+                    { label: 'Skills Tracked', value: skills.length, icon: '📚' },
+                    { label: 'Completed', value: completedSkills, icon: '✅' },
+                    { label: 'Units Done', value: doneUnits, icon: '📈' },
+                    { label: 'Units Left', value: leftUnits, icon: '🎯' },
+                    { label: 'Best Streak', value: `${stats.streak_best}d`, icon: streakActive ? '🔥' : '💤' },
+                ].map(({ label, value, icon }) => (
+                    <div key={label} className="bg-slate-800 border border-slate-700 rounded-xl p-4 text-center">
+                        <div className="text-2xl leading-none mb-1">{icon}</div>
+                        <div className="text-xl font-extrabold font-mono">{value}</div>
+                        <div className="text-[11px] font-mono text-slate-500 mt-1">{label}</div>
+                    </div>
+                ))}
+            </div>
+
+            {/* Coin Shop */}
+            <CoinShop
+                coins={stats.coins}
+                freezes={stats.streak_freezes}
+                boosterLeft={stats.booster_left}
+                deadlineUnlocked={stats.deadline_unlocked}
+                onBuyFreeze={buyFreeze}
+                onBuyBooster={buyBooster}
+                onBuyDeadline={buyDeadlineTracker}
+                onOpenDeadlineModal={() => openDeadlineModal()}
+                onToast={showToast}
+            />
+
+            {/* Activity Heatmap */}
+            <ActivityHeatmap log={log} />
+
+            {/* Charts */}
+            <Charts skills={skills} weeklyData={getWeeklyData()} />
+
+            {/* Skill cards */}
+            <div>
+                <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-base font-bold">Your Skills</h2>
+                    <button
+                        onClick={() => setAddSkillOpen(true)}
+                        className="bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold px-4 py-2 rounded-lg transition-all"
+                    >
+                        + Add Skill
+                    </button>
+                </div>
+
+                {activeSkills.length === 0 && completedSkillsList.length === 0 ? (
+                    <div className="text-center py-16 text-slate-500 font-mono text-sm border border-dashed border-slate-700 rounded-xl">
+                        No skills yet — click &quot;+ Add Skill&quot; to get started!
+                    </div>
+                ) : (
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                        {activeSkills.map(skill => (
+                            <SkillCard
+                                key={skill.id}
+                                skill={skill}
+                                deadlineInfo={getDeadlineInfo(skill)}
+                                deadlineUnlocked={stats.deadline_unlocked}
+                                onIncrement={handleIncrement}
+                                onUndo={handleUndo}
+                                onDelete={async (id) => { await deleteSkill(id) }}
+                                onSetDeadline={(id) => openDeadlineModal(id)}
+                                onRemoveDeadline={handleRemoveDeadline}
+                            />
+                        ))}
+                    </div>
+                )}
+            </div>
+
+            {/* Completed skills */}
+            {completedSkillsList.length > 0 && (
+                <div>
+                    <h3 className="text-xs font-mono text-slate-500 mb-3 uppercase tracking-widest">
+                        Completed
+                    </h3>
+                    <div className="flex flex-wrap gap-2">
+                        {completedSkillsList.map(skill => (
+                            <span
+                                key={skill.id}
+                                className="bg-slate-800 border border-emerald-700/50 text-emerald-400 text-xs font-mono px-3 py-1.5 rounded-full"
+                            >
+                                ✓ {skill.name}
+                            </span>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            {/* Modals */}
+            <AddSkillModal
+                isOpen={addSkillOpen}
+                onClose={() => setAddSkillOpen(false)}
+                onAdd={async (newSkill) => {
+                    await addSkill(newSkill)
+                    setAddSkillOpen(false)
+                }}
+            />
+
+            <DeadlineModal
+                isOpen={deadlineModalOpen}
+                onClose={() => setDeadlineModalOpen(false)}
+                skills={skills}
+                preselectedSkillId={deadlineSkillId}
+                onSave={handleSaveDeadline}
+            />
+
+            <MilestonePop data={milestoneData} visible={milestoneVisible} />
+
+            {/* Toast notification */}
+            {toast && (
+                <div className="fixed bottom-6 right-6 bg-slate-800 border border-slate-700 text-white text-sm font-mono px-4 py-3 rounded-xl shadow-xl z-40">
+                    {toast}
+                </div>
+            )}
+        </div>
+    )
+}
