@@ -146,11 +146,14 @@ export function useSkills(userId: string) {
             .eq('skill_id', skillId)
             .select('skill_id')
 
+        console.log('[updateCounter] UPDATE result:', { updated, updateErr, skillId, newValue })
+
         // 3. If no row matched, INSERT one
         if (!updateErr && (!updated || updated.length === 0)) {
-            await supabase
+            const { error: insertErr } = await supabase
                 .from('skill_progress')
                 .insert({ skill_id: skillId, counter: newValue })
+            console.log('[updateCounter] INSERT result:', { insertErr, skillId, newValue })
         }
 
         // 4. Once the DB is in sync, clear the pending local override
