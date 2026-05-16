@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 
 export interface Skill {
@@ -30,6 +30,10 @@ export function useSkills(userId: string) {
     const [loading, setLoading] = useState(true)
     const supabase = createClient()
 
+    // Track counters that have been updated locally but may not yet be in the DB.
+    // fetchSkills will merge these in so real-time subscription can't wipe them.
+    const localCounters = useRef<Record<string, number>>({})
+
     const fetchSkills = useCallback(async () => {
         const { data, error } = await supabase
             .from('skills')
@@ -43,18 +47,23 @@ export function useSkills(userId: string) {
             .order('created_at', { ascending: true })
 
         if (!error && data) {
-            const mapped: Skill[] = data.map((s: any) => ({
-                id: s.id,
-                name: s.name,
-                total: s.total,
-                unit: s.unit,
-                color: s.color,
-                incs: s.incs,
-                has_custom: s.has_custom,
-                is_pinned: s.is_pinned,
-                position: s.position,
-                counter: s.skill_progress?.[0]?.counter ?? 0,
-            }))
+            const mapped: Skill[] = data.map((s: any) => {
+                const dbCounter = s.skill_progress?.[0]?.counter ?? 0
+                // Prefer the local value if we have a pending optimistic update
+                const counter = localCounters.current[s.id] ?? dbCounter
+                return {
+                    id: s.id,
+                    name: s.name,
+                    total: s.total,
+                    unit: s.unit,
+                    color: s.color,
+                    incs: s.incs,
+                    has_custom: s.has_custom,
+                    is_pinned: s.is_pinned,
+                    position: s.position,
+                    counter,
+                }
+            })
             setSkills(mapped)
         }
         setLoading(false)
@@ -99,8 +108,7 @@ export function useSkills(userId: string) {
         }).select('id').single()
 
         if (!error && inserted) {
-            // Create the skill_progress row immediately so updateCounter never
-            // silently fails due to a missing row.
+            // Ensure a skill_progress row exists for the new skill
             await supabase.from('skill_progress').insert({
                 skill_id: inserted.id,
                 counter: 0,
@@ -118,25 +126,37 @@ export function useSkills(userId: string) {
             .eq('user_id', userId)
 
         if (!error) {
+            delete localCounters.current[skillId]
             setSkills(prev => prev.filter(s => s.id !== skillId))
         }
         return error
     }
 
     async function updateCounter(skillId: string, newValue: number) {
-        const { error } = await supabase
-            .from('skill_progress')
-            .upsert(
-                { skill_id: skillId, counter: newValue },
-                { onConflict: 'skill_id' }
-            )
+        // 1. Optimistic local update — always happens immediately
+        localCounters.current[skillId] = newValue
+        setSkills(prev =>
+            prev.map(s => s.id === skillId ? { ...s, counter: newValue } : s)
+        )
 
-        if (!error) {
-            setSkills(prev =>
-                prev.map(s => s.id === skillId ? { ...s, counter: newValue } : s)
-            )
+        // 2. Try UPDATE (works when the row already exists)
+        const { data: updated, error: updateErr } = await supabase
+            .from('skill_progress')
+            .update({ counter: newValue })
+            .eq('skill_id', skillId)
+            .select('skill_id')
+
+        // 3. If no row matched, INSERT one
+        if (!updateErr && (!updated || updated.length === 0)) {
+            await supabase
+                .from('skill_progress')
+                .insert({ skill_id: skillId, counter: newValue })
         }
-        return error
+
+        // 4. Once the DB is in sync, clear the pending local override
+        if (!updateErr) {
+            delete localCounters.current[skillId]
+        }
     }
 
     return { skills, loading, addSkill, deleteSkill, updateCounter, refetch: fetchSkills }
