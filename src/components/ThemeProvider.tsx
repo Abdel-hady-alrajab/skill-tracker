@@ -13,20 +13,30 @@ export function useTheme() {
     return useContext(ThemeContext)
 }
 
+function applyTheme(t: Theme) {
+    if (t === 'light') {
+        document.documentElement.classList.add('light')
+    } else {
+        document.documentElement.classList.remove('light')
+    }
+}
+
 export default function ThemeProvider({ children }: { children: React.ReactNode }) {
     const [theme, setTheme] = useState<Theme>('dark')
 
     useEffect(() => {
         const saved = (localStorage.getItem('theme') as Theme) ?? 'dark'
         setTheme(saved)
-        document.documentElement.classList.toggle('light', saved === 'light')
+        applyTheme(saved)
     }, [])
 
     function toggle() {
-        const next: Theme = theme === 'dark' ? 'light' : 'dark'
-        setTheme(next)
-        localStorage.setItem('theme', next)
-        document.documentElement.classList.toggle('light', next === 'light')
+        setTheme(prev => {
+            const next: Theme = prev === 'dark' ? 'light' : 'dark'
+            localStorage.setItem('theme', next)
+            applyTheme(next)
+            return next
+        })
     }
 
     return (
