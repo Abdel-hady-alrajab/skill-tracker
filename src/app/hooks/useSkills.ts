@@ -87,7 +87,7 @@ export function useSkills(userId: string) {
             ? Math.max(...skills.map(s => s.position))
             : -1
 
-        const { error } = await supabase.from('skills').insert({
+        const { data: inserted, error } = await supabase.from('skills').insert({
             user_id: userId,
             name: newSkill.name,
             total: newSkill.total,
@@ -96,9 +96,17 @@ export function useSkills(userId: string) {
             incs: newSkill.incs,
             has_custom: newSkill.has_custom,
             position: maxPosition + 1,
-        })
+        }).select('id').single()
 
-        if (!error) await fetchSkills()
+        if (!error && inserted) {
+            // Create the skill_progress row immediately so updateCounter never
+            // silently fails due to a missing row.
+            await supabase.from('skill_progress').insert({
+                skill_id: inserted.id,
+                counter: 0,
+            })
+            await fetchSkills()
+        }
         return error
     }
 
@@ -118,8 +126,10 @@ export function useSkills(userId: string) {
     async function updateCounter(skillId: string, newValue: number) {
         const { error } = await supabase
             .from('skill_progress')
-            .update({ counter: newValue })
-            .eq('skill_id', skillId)
+            .upsert(
+                { skill_id: skillId, counter: newValue },
+                { onConflict: 'skill_id' }
+            )
 
         if (!error) {
             setSkills(prev =>
