@@ -27,11 +27,12 @@ export default async function DashboardLayout({
     return (
         <div className="min-h-screen bg-slate-900">
             <Navbar
+                userId={user.id}
                 email={user.email ?? ''}
-                coins={stats?.coins ?? 0}
-                streakCount={stats?.streak_count ?? 0}
-                streakActive={streakActive}
-                freezes={stats?.streak_freezes ?? 0}
+                initialCoins={stats?.coins ?? 0}
+                initialStreakCount={stats?.streak_count ?? 0}
+                initialStreakActive={streakActive}
+                initialFreezes={stats?.streak_freezes ?? 0}
             />
             <main className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
                 {children}

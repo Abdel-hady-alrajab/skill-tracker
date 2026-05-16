@@ -1,27 +1,64 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { useTheme } from '@/components/ThemeProvider'
 
 interface NavbarProps {
+    userId: string
     email: string
-    coins: number
-    streakCount: number
-    streakActive: boolean
-    freezes: number
+    initialCoins: number
+    initialStreakCount: number
+    initialStreakActive: boolean
+    initialFreezes: number
+}
+
+function todayStr() {
+    const d = new Date()
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 }
 
 export default function Navbar({
+    userId,
     email,
-    coins,
-    streakCount,
-    streakActive,
-    freezes,
+    initialCoins,
+    initialStreakCount,
+    initialStreakActive,
+    initialFreezes,
 }: NavbarProps) {
     const router = useRouter()
     const supabase = createClient()
     const { theme, toggle } = useTheme()
+
+    const [coins, setCoins] = useState(initialCoins)
+    const [streakCount, setStreakCount] = useState(initialStreakCount)
+    const [streakActive, setStreakActive] = useState(initialStreakActive)
+    const [freezes, setFreezes] = useState(initialFreezes)
+
+    // Subscribe to real-time user_stats changes so coins/streak stay in sync
+    useEffect(() => {
+        const channel = supabase
+            .channel('navbar-stats')
+            .on(
+                'postgres_changes',
+                {
+                    event: 'UPDATE',
+                    schema: 'public',
+                    table: 'user_stats',
+                    filter: `user_id=eq.${userId}`,
+                },
+                ({ new: s }) => {
+                    setCoins((s as any).coins)
+                    setStreakCount((s as any).streak_count)
+                    setStreakActive((s as any).streak_last_date === todayStr())
+                    setFreezes((s as any).streak_freezes)
+                }
+            )
+            .subscribe()
+
+        return () => { supabase.removeChannel(channel) }
+    }, [userId])
 
     async function signOut() {
         await supabase.auth.signOut()
