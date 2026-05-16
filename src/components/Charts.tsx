@@ -13,12 +13,20 @@ import {
     Tooltip,
     Legend,
     Filler,
+    DoughnutController,
+    BarController,
+    LineController,
+    RadarController,
 } from 'chart.js'
 import type { Skill } from '@/app/hooks/useSkills'
 import type { WeeklyChartData } from '@/app/hooks/useIncrementLog'
 
 // Register all Chart.js components we use
 Chart.register(
+    DoughnutController,
+    BarController,
+    LineController,
+    RadarController,
     ArcElement,
     BarElement,
     LineElement,
