@@ -85,7 +85,7 @@ export default function DashboardClient({ userId }: Props) {
 
         for (let i = 0; i < LEGACY_SKILLS.length; i++) {
             const ls = LEGACY_SKILLS[i]
-            const { data: inserted } = await supabase.from('skills').insert({
+            await supabase.from('skills').insert({
                 user_id: userId,
                 name: ls.name,
                 total: ls.total,
@@ -94,14 +94,8 @@ export default function DashboardClient({ userId }: Props) {
                 incs: [1],
                 has_custom: false,
                 position: maxPos + 1 + i,
-            }).select('id').single()
-
-            if (inserted) {
-                await supabase.from('skill_progress').insert({
-                    skill_id: inserted.id,
-                    counter: ls.total, // mark as completed
-                })
-            }
+                counter: ls.total, // mark as completed
+            })
         }
 
         localStorage.setItem('legacy_skills_imported', 'true')

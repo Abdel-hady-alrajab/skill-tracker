@@ -13,7 +13,7 @@ export interface Skill {
     has_custom: boolean
     is_pinned: boolean
     position: number
-    counter: number // joined from skill_progress
+    counter: number
 }
 
 export interface NewSkill {
@@ -30,8 +30,7 @@ export function useSkills(userId: string) {
     const [loading, setLoading] = useState(true)
     const supabase = createClient()
 
-    // When true, subscription-triggered fetchSkills calls are ignored.
-    // Used during addSkill so the INSERT events don't wipe existing counters.
+    // Block subscription-triggered fetches during addSkill inserts
     const blockFetch = useRef(false)
 
     const fetchSkills = useCallback(async (force = false) => {
@@ -39,10 +38,7 @@ export function useSkills(userId: string) {
 
         const { data, error } = await supabase
             .from('skills')
-            .select(`
-        id, name, total, unit, color, incs, has_custom, is_pinned, position,
-        skill_progress ( counter )
-      `)
+            .select('id, name, total, unit, color, incs, has_custom, is_pinned, position, counter')
             .eq('user_id', userId)
             .order('is_pinned', { ascending: false })
             .order('position', { ascending: true })
@@ -59,7 +55,7 @@ export function useSkills(userId: string) {
                 has_custom: s.has_custom,
                 is_pinned: s.is_pinned,
                 position: s.position,
-                counter: s.skill_progress?.[0]?.counter ?? 0,
+                counter: s.counter ?? 0,
             }))
             setSkills(mapped)
         }
@@ -77,11 +73,6 @@ export function useSkills(userId: string) {
                 table: 'skills',
                 filter: `user_id=eq.${userId}`,
             }, () => fetchSkills())
-            .on('postgres_changes', {
-                event: '*',
-                schema: 'public',
-                table: 'skill_progress',
-            }, () => fetchSkills())
             .subscribe()
 
         return () => { supabase.removeChannel(channel) }
@@ -92,29 +83,25 @@ export function useSkills(userId: string) {
             ? Math.max(...skills.map(s => s.position))
             : -1
 
-        // Block subscription-triggered fetches while we insert.
-        // The INSERT fires 2 events (skills + skill_progress) — we skip both.
         blockFetch.current = true
 
-        const { data: inserted, error } = await supabase.from('skills').insert({
-            user_id: userId,
-            name: newSkill.name,
-            total: newSkill.total,
-            unit: newSkill.unit,
-            color: newSkill.color,
-            incs: newSkill.incs,
-            has_custom: newSkill.has_custom,
-            position: maxPosition + 1,
-        }).select('id, name, total, unit, color, incs, has_custom, is_pinned, position').single()
-
-        if (!error && inserted) {
-            await supabase.from('skill_progress').insert({
-                skill_id: inserted.id,
+        const { data: inserted, error } = await supabase
+            .from('skills')
+            .insert({
+                user_id: userId,
+                name: newSkill.name,
+                total: newSkill.total,
+                unit: newSkill.unit,
+                color: newSkill.color,
+                incs: newSkill.incs,
+                has_custom: newSkill.has_custom,
+                position: maxPosition + 1,
                 counter: 0,
             })
+            .select('id, name, total, unit, color, incs, has_custom, is_pinned, position, counter')
+            .single()
 
-            // Append directly — never call fetchSkills here, it would read 0
-            // from the DB for all existing skills and wipe their local counters.
+        if (!error && inserted) {
             setSkills(prev => [
                 ...prev,
                 {
@@ -132,9 +119,7 @@ export function useSkills(userId: string) {
             ])
         }
 
-        // Unblock after a short delay so subscription events settle
         setTimeout(() => { blockFetch.current = false }, 800)
-
         return error
     }
 
@@ -157,19 +142,12 @@ export function useSkills(userId: string) {
             prev.map(s => s.id === skillId ? { ...s, counter: newValue } : s)
         )
 
-        // Try UPDATE first (works when the row already exists)
-        const { data: updated, error: updateErr } = await supabase
-            .from('skill_progress')
+        // Persist to the skills table directly — same RLS that works for everything else
+        await supabase
+            .from('skills')
             .update({ counter: newValue })
-            .eq('skill_id', skillId)
-            .select('skill_id')
-
-        // If no row was found, INSERT one
-        if (!updateErr && (!updated || updated.length === 0)) {
-            await supabase
-                .from('skill_progress')
-                .insert({ skill_id: skillId, counter: newValue })
-        }
+            .eq('id', skillId)
+            .eq('user_id', userId)
     }
 
     return { skills, loading, addSkill, deleteSkill, updateCounter, refetch: (force?: boolean) => fetchSkills(force ?? true) }
