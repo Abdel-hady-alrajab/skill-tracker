@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { Syne } from 'next/font/google'
 import { JetBrains_Mono } from 'next/font/google'
 import './globals.css'
+import ThemeProvider from '@/components/ThemeProvider'
 
 const syne = Syne({
   subsets: ['latin'],
@@ -53,9 +54,9 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" className={`${syne.variable} ${jetbrainsMono.variable}`}>
+    <html lang="en" className={`${syne.variable} ${jetbrainsMono.variable}`} suppressHydrationWarning>
       <body className="bg-slate-900 text-slate-100 font-sans antialiased">
-        {children}
+        <ThemeProvider>{children}</ThemeProvider>
       </body>
     </html>
   )

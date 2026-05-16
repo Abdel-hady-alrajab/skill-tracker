@@ -12,3 +12,55 @@ body {
 .font-mono {
   font-family: var(--font-mono);
 }
+
+/* ── Light mode overrides ───────────────────────────────────────────── */
+/* Applied when <html> has the .light class                             */
+
+html.light body {
+  background-color: #f1f5f9;
+  color: #0f172a;
+}
+
+/* Backgrounds */
+html.light .bg-slate-950 { background-color: #f1f5f9; }
+html.light .bg-slate-900 { background-color: #e2e8f0; }
+html.light .bg-slate-800 { background-color: #ffffff; }
+html.light .bg-slate-700 { background-color: #f1f5f9; }
+
+/* Navbar backdrop */
+html.light .bg-slate-900\/80 { background-color: rgba(226,232,240,0.85) !important; }
+
+/* Borders */
+html.light .border-slate-800 { border-color: #cbd5e1; }
+html.light .border-slate-700 { border-color: #cbd5e1; }
+html.light .border-slate-700\/50 { border-color: rgba(148,163,184,0.5); }
+html.light .border-slate-600 { border-color: #94a3b8; }
+
+/* Text */
+html.light .text-white     { color: #0f172a; }
+html.light .text-slate-100 { color: #1e293b; }
+html.light .text-slate-400 { color: #475569; }
+html.light .text-slate-500 { color: #64748b; }
+html.light .text-slate-600 { color: #94a3b8; }
+
+/* Input / form fields */
+html.light input,
+html.light select,
+html.light textarea {
+  background-color: #f8fafc !important;
+  color: #0f172a !important;
+  border-color: #cbd5e1 !important;
+}
+
+html.light input::placeholder,
+html.light textarea::placeholder {
+  color: #94a3b8;
+}
+
+/* Hover overrides */
+html.light .hover\:bg-slate-600:hover { background-color: #e2e8f0; }
+html.light .hover\:border-slate-600:hover { border-color: #94a3b8; }
+html.light .hover\:border-slate-500:hover { border-color: #64748b; }
+
+/* Dashed empty-state border */
+html.light .border-dashed { border-color: #cbd5e1; }

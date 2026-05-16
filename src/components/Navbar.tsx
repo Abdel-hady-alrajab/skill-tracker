@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
+import { useTheme } from '@/components/ThemeProvider'
 
 interface NavbarProps {
     email: string
@@ -20,6 +21,7 @@ export default function Navbar({
 }: NavbarProps) {
     const router = useRouter()
     const supabase = createClient()
+    const { theme, toggle } = useTheme()
 
     async function signOut() {
         await supabase.auth.signOut()
@@ -61,6 +63,15 @@ export default function Navbar({
                     <span className="hidden md:block text-slate-500 text-xs truncate max-w-[160px]">
                         {email}
                     </span>
+
+                    {/* Theme toggle */}
+                    <button
+                        onClick={toggle}
+                        title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+                        className="text-slate-400 hover:text-white border border-slate-700 hover:border-slate-500 text-sm px-2.5 py-1.5 rounded-lg transition-all"
+                    >
+                        {theme === 'dark' ? '☀️' : '🌙'}
+                    </button>
 
                     {/* Sign out */}
                     <button
