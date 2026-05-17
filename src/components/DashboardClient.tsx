@@ -318,7 +318,7 @@ export default function DashboardClient({ userId }: Props) {
                         No skills yet — click &quot;+ Add Skill&quot; to get started!
                     </div>
                 ) : (
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 lg:grid-cols-1 gap-4">
                         {activeSkills.map(skill => (
                             <SkillCard
                                 key={skill.id}

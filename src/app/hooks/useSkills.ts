@@ -57,7 +57,7 @@ export function useSkills(userId: string) {
                 has_custom: s.has_custom,
                 is_pinned: s.is_pinned,
                 position: s.position,
-                counter: s.skill_progress?.[0]?.counter ?? 0,
+                counter: (Array.isArray(s.skill_progress) ? s.skill_progress[0]?.counter : s.skill_progress?.counter) ?? 0,
             })))
         }
         setLoading(false)
