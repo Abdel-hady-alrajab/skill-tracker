@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useMemo } from 'react'
+import { useEffect, useRef, useMemo, useState } from 'react'
 import {
     Chart,
     ArcElement,
@@ -122,11 +122,17 @@ function Empty({ msg }: { msg: string }) {
 // CHART 1 — Doughnut: progress per skill
 // ─────────────────────────────────────────────────────────────────
 function ProgressDoughnut({ skills, c }: { skills: Skill[]; c: C }) {
-    const pcts = skills.map(s => parseFloat(Math.min((s.counter / s.total) * 100, 100).toFixed(1)))
+    const [animate, setAnimate] = useState(false)
+    useEffect(() => {
+        const t = setTimeout(() => setAnimate(true), 250)
+        return () => clearTimeout(t)
+    }, [])
+
+    const pcts = skills.map(s => animate ? parseFloat(Math.min((s.counter / s.total) * 100, 100).toFixed(1)) : 0)
     const cols = skills.map(skillColor)
     const tipBase = { backgroundColor: c.tipBg, titleColor: c.tipTx, bodyColor: c.tipTx, borderColor: c.tipBd, borderWidth: 1 }
 
-    const ref = useChart([skills, c.doughnutBorder], canvas =>
+    const ref = useChart([skills, c.doughnutBorder, animate], canvas =>
         new Chart(canvas, {
             type: 'doughnut',
             data: {
@@ -143,6 +149,10 @@ function ProgressDoughnut({ skills, c }: { skills: Skill[]; c: C }) {
                 responsive: true,
                 maintainAspectRatio: false,
                 cutout: '65%',
+                animation: {
+                    duration: 1200,
+                    easing: 'easeOutQuart',
+                },
                 plugins: {
                     legend: { display: false },
                     tooltip: {
@@ -156,13 +166,16 @@ function ProgressDoughnut({ skills, c }: { skills: Skill[]; c: C }) {
 
     if (!skills.length) return <Empty msg="Add skills to see chart" />
 
+    // Show the actual percentages in the legend text directly even during initial animation loading phase for premium clarity
+    const displayPcts = skills.map(s => parseFloat(Math.min((s.counter / s.total) * 100, 100).toFixed(1)))
+
     return (
         <div>
             <div className="flex flex-wrap gap-x-4 gap-y-1.5 mb-3">
                 {skills.map((s, i) => (
                     <span key={s.id} className="flex items-center gap-1.5 text-xs font-mono text-slate-400">
                         <span className="w-2.5 h-2.5 rounded-sm flex-shrink-0" style={{ background: cols[i] }} />
-                        {s.name} {pcts[i]}%
+                        {s.name} {displayPcts[i]}%
                     </span>
                 ))}
             </div>
@@ -177,10 +190,16 @@ function ProgressDoughnut({ skills, c }: { skills: Skill[]; c: C }) {
 // CHART 2 — Stacked horizontal bar: done vs remaining
 // ─────────────────────────────────────────────────────────────────
 function DoneVsRemaining({ skills, c }: { skills: Skill[]; c: C }) {
+    const [animate, setAnimate] = useState(false)
+    useEffect(() => {
+        const t = setTimeout(() => setAnimate(true), 300)
+        return () => clearTimeout(t)
+    }, [])
+
     const h = Math.max(skills.length * 44 + 50, 180)
     const tipBase = { backgroundColor: c.tipBg, titleColor: c.tipTx, bodyColor: c.tipTx, borderColor: c.tipBd, borderWidth: 1 }
 
-    const ref = useChart([skills, c.remain], canvas =>
+    const ref = useChart([skills, c.remain, animate], canvas =>
         new Chart(canvas, {
             type: 'bar',
             data: {
@@ -188,7 +207,7 @@ function DoneVsRemaining({ skills, c }: { skills: Skill[]; c: C }) {
                 datasets: [
                     {
                         label: 'Done',
-                        data: skills.map(s => s.counter),
+                        data: skills.map(s => animate ? s.counter : 0),
                         backgroundColor: skills.map(skillColor),
                         borderRadius: 4,
                         borderSkipped: false,
@@ -196,7 +215,7 @@ function DoneVsRemaining({ skills, c }: { skills: Skill[]; c: C }) {
                     },
                     {
                         label: 'Remaining',
-                        data: skills.map(s => Math.max(0, s.total - s.counter)),
+                        data: skills.map(s => animate ? Math.max(0, s.total - s.counter) : 0),
                         backgroundColor: c.remain,
                         borderRadius: 4,
                         borderSkipped: false,
@@ -208,6 +227,10 @@ function DoneVsRemaining({ skills, c }: { skills: Skill[]; c: C }) {
                 indexAxis: 'y',
                 responsive: true,
                 maintainAspectRatio: false,
+                animation: {
+                    duration: 1200,
+                    easing: 'easeOutQuart',
+                },
                 scales: {
                     x: {
                         stacked: true,
@@ -251,10 +274,16 @@ function DoneVsRemaining({ skills, c }: { skills: Skill[]; c: C }) {
 // CHART 3 — Radar: skill strength
 // ─────────────────────────────────────────────────────────────────
 function SkillRadar({ skills, c }: { skills: Skill[]; c: C }) {
-    const pcts = skills.map(s => parseFloat(Math.min((s.counter / s.total) * 100, 100).toFixed(1)))
+    const [animate, setAnimate] = useState(false)
+    useEffect(() => {
+        const t = setTimeout(() => setAnimate(true), 350)
+        return () => clearTimeout(t)
+    }, [])
+
+    const pcts = skills.map(s => animate ? parseFloat(Math.min((s.counter / s.total) * 100, 100).toFixed(1)) : 0)
     const tipBase = { backgroundColor: c.tipBg, titleColor: c.tipTx, bodyColor: c.tipTx, borderColor: c.tipBd, borderWidth: 1 }
 
-    const ref = useChart([skills, c.grid], canvas =>
+    const ref = useChart([skills, c.grid, animate], canvas =>
         new Chart(canvas, {
             type: 'radar',
             data: {
@@ -274,6 +303,10 @@ function SkillRadar({ skills, c }: { skills: Skill[]; c: C }) {
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
+                animation: {
+                    duration: 1200,
+                    easing: 'easeOutQuart',
+                },
                 scales: {
                     r: {
                         min: 0,
@@ -313,20 +346,26 @@ function SkillRadar({ skills, c }: { skills: Skill[]; c: C }) {
 // CHART 4 — Vertical bar: units completed ranking
 // ─────────────────────────────────────────────────────────────────
 function UnitsRanking({ skills, c }: { skills: Skill[]; c: C }) {
+    const [animate, setAnimate] = useState(false)
+    useEffect(() => {
+        const t = setTimeout(() => setAnimate(true), 400)
+        return () => clearTimeout(t)
+    }, [])
+
     const sorted = useMemo(
         () => [...skills].sort((a, b) => b.counter - a.counter),
         [skills]
     )
     const tipBase = { backgroundColor: c.tipBg, titleColor: c.tipTx, bodyColor: c.tipTx, borderColor: c.tipBd, borderWidth: 1 }
 
-    const ref = useChart([skills, c.grid], canvas =>
+    const ref = useChart([skills, c.grid, animate], canvas =>
         new Chart(canvas, {
             type: 'bar',
             data: {
                 labels: sorted.map(s => s.name),
                 datasets: [{
                     label: 'Units done',
-                    data: sorted.map(s => s.counter),
+                    data: sorted.map(s => animate ? s.counter : 0),
                     backgroundColor: sorted.map(skillColor),
                     borderRadius: 6,
                     borderSkipped: false,
@@ -335,6 +374,10 @@ function UnitsRanking({ skills, c }: { skills: Skill[]; c: C }) {
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
+                animation: {
+                    duration: 1200,
+                    easing: 'easeOutQuart',
+                },
                 scales: {
                     x: {
                         grid: { display: false },
@@ -377,12 +420,18 @@ function UnitsRanking({ skills, c }: { skills: Skill[]; c: C }) {
 // CHART 5 — Line: weekly activity per skill
 // ─────────────────────────────────────────────────────────────────
 function WeeklyActivity({ weeklyData, c }: { weeklyData: WeeklyChartData; c: C }) {
+    const [animate, setAnimate] = useState(false)
+    useEffect(() => {
+        const t = setTimeout(() => setAnimate(true), 450)
+        return () => clearTimeout(t)
+    }, [])
+
     const { labels, datasets } = weeklyData
     const tipBase = { backgroundColor: c.tipBg, titleColor: c.tipTx, bodyColor: c.tipTx, borderColor: c.tipBd, borderWidth: 1 }
 
     const chartDatasets = datasets.map((ds, i) => ({
         label: ds.skillName,
-        data: ds.data,
+        data: ds.data.map(val => animate ? val : 0),
         borderColor: ds.color,
         backgroundColor: ds.color + '22',
         borderDash: i === 0 ? [] : i === 1 ? [6, 3] : [2, 2],
@@ -393,7 +442,7 @@ function WeeklyActivity({ weeklyData, c }: { weeklyData: WeeklyChartData; c: C }
         tension: 0.35,
     }))
 
-    const ref = useChart([weeklyData, c.grid], canvas =>
+    const ref = useChart([weeklyData, c.grid, animate], canvas =>
         new Chart(canvas, {
             type: 'line',
             data: { labels, datasets: chartDatasets },
@@ -401,6 +450,10 @@ function WeeklyActivity({ weeklyData, c }: { weeklyData: WeeklyChartData; c: C }
                 responsive: true,
                 maintainAspectRatio: false,
                 interaction: { mode: 'index', intersect: false },
+                animation: {
+                    duration: 1200,
+                    easing: 'easeOutQuart',
+                },
                 scales: {
                     x: {
                         grid: { color: c.grid },

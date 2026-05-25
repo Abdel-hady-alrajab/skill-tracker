@@ -57,7 +57,7 @@ export default function AuthForm() {
   return (
     <div className="w-full max-w-md">
       {/* Logo / Title */}
-      <div className="mb-8 text-center">
+      <div className="mb-8 text-center animate-fade-in-up delay-0">
         <h1 className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-blue-400 to-emerald-400 bg-clip-text text-transparent">
           Skill Tracker
         </h1>
@@ -67,12 +67,12 @@ export default function AuthForm() {
       </div>
 
       {/* Card */}
-      <div className="bg-slate-800 border border-slate-700 rounded-2xl p-8 shadow-xl">
+      <div className="bg-slate-800 border border-slate-700 rounded-2xl p-8 shadow-xl animate-fade-in-scale delay-150">
 
         {/* Google button */}
         <button
           onClick={handleGoogle}
-          className="w-full flex items-center justify-center gap-3 bg-slate-700 hover:bg-slate-600 border border-slate-600 text-white font-semibold text-sm py-3 px-4 rounded-xl transition-all mb-6"
+          className="w-full flex items-center justify-center gap-3 bg-slate-700 hover:bg-slate-600 border border-slate-600 hover:border-slate-500 text-white font-semibold text-sm py-3 px-4 rounded-xl transition-all duration-300 mb-6 active:scale-95 hover:shadow-lg"
         >
           <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
             <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z" fill="#4285F4"/>
@@ -107,7 +107,7 @@ export default function AuthForm() {
               onChange={e => setEmail(e.target.value)}
               required
               placeholder="you@example.com"
-              className="w-full bg-slate-900 border border-slate-700 focus:border-blue-500 text-white placeholder-slate-600 rounded-xl px-4 py-3 text-sm outline-none transition-colors"
+              className="w-full bg-slate-900 border border-slate-700 focus:border-blue-500 focus:shadow-[0_0_0_3px_rgba(59,130,246,0.15)] text-white placeholder-slate-600 rounded-xl px-4 py-3 text-sm outline-none transition-all duration-200"
             />
           </div>
 
@@ -122,20 +122,20 @@ export default function AuthForm() {
               required
               placeholder="••••••••"
               minLength={6}
-              className="w-full bg-slate-900 border border-slate-700 focus:border-blue-500 text-white placeholder-slate-600 rounded-xl px-4 py-3 text-sm outline-none transition-colors"
+              className="w-full bg-slate-900 border border-slate-700 focus:border-blue-500 focus:shadow-[0_0_0_3px_rgba(59,130,246,0.15)] text-white placeholder-slate-600 rounded-xl px-4 py-3 text-sm outline-none transition-all duration-200"
             />
           </div>
 
           {/* Error */}
           {error && (
-            <div className="bg-red-500/10 border border-red-500/30 text-red-400 text-sm font-mono rounded-xl px-4 py-3">
+            <div className="bg-red-500/10 border border-red-500/30 text-red-400 text-sm font-mono rounded-xl px-4 py-3 animate-shake">
               {error}
             </div>
           )}
 
           {/* Success message */}
           {message && (
-            <div className="bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-sm font-mono rounded-xl px-4 py-3">
+            <div className="bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-sm font-mono rounded-xl px-4 py-3 animate-fade-in-up">
               {message}
             </div>
           )}
@@ -143,7 +143,7 @@ export default function AuthForm() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-blue-500 hover:bg-blue-400 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold text-sm py-3 px-4 rounded-xl transition-all mt-2"
+            className="w-full bg-blue-500 hover:bg-blue-400 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold text-sm py-3 px-4 rounded-xl transition-all duration-200 mt-2 active:scale-95 disabled:active:scale-100 hover:shadow-[0_0_15px_rgba(59,130,246,0.3)]"
           >
             {loading
               ? 'Please wait…'
@@ -158,7 +158,7 @@ export default function AuthForm() {
           {mode === 'login' ? "Don't have an account?" : 'Already have an account?'}{' '}
           <button
             onClick={() => { setMode(mode === 'login' ? 'signup' : 'login'); setError(null); setMessage(null) }}
-            className="text-blue-400 hover:text-blue-300 font-semibold transition-colors"
+            className="text-blue-400 hover:text-blue-300 font-semibold transition-all duration-200 hover:underline underline-offset-4"
           >
             {mode === 'login' ? 'Sign up' : 'Sign in'}
           </button>

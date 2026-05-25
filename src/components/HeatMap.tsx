@@ -176,7 +176,7 @@ export default function ActivityHeatmap({ log }: Props) {
                                             onMouseEnter={e => handleMouseEnter(cell, e)}
                                             onMouseLeave={() => setTooltip(null)}
                                             className={`
-                        w-[15px] h-[15px] rounded-[3px] cursor-default transition-opacity
+                        w-[15px] h-[15px] rounded-[3px] cursor-default
                         ${LEVEL_CLASSES[cell.level]}
                         ${cell.isFuture ? 'opacity-20' : 'hover:opacity-75'}
                         ${cell.isToday ? 'ring-2 ring-blue-400 ring-offset-1 ring-offset-slate-800' : ''}
@@ -198,7 +198,7 @@ export default function ActivityHeatmap({ log }: Props) {
                     style={{
                         left: tooltip.x,
                         top: tooltip.y,
-                        transform: 'translate(-50%, -100%)',
+                        transform: 'translate(-125%, -500%)',
                     }}
                 >
                     {tooltip.text}

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import type { Skill } from '@/app/hooks/useSkills'
 import DeadlineBar from '@/components/DeadlineBar'
 
@@ -45,9 +45,18 @@ export default function SkillCard({
 }: SkillCardProps) {
     const [customAmt, setCustomAmt] = useState('')
     const [busy, setBusy] = useState(false)
+    const [animatedPct, setAnimatedPct] = useState(0)
 
     const pct = Math.min((skill.counter / skill.total) * 100, 100)
     const gradient = BAR_GRADIENTS[skill.color] ?? BAR_GRADIENTS.blue
+
+    useEffect(() => {
+        // Set animated percentage after component mounts to trigger the transition
+        const t = setTimeout(() => {
+            setAnimatedPct(pct)
+        }, 100)
+        return () => clearTimeout(t)
+    }, [pct])
 
     async function handle(amount: number) {
         if (busy) return
@@ -76,7 +85,7 @@ export default function SkillCard({
     }
 
     return (
-        <div className="bg-slate-800 border border-slate-700 hover:border-slate-600 rounded-xl p-5 transition-colors">
+        <div className="bg-slate-800 border border-slate-700 hover:border-slate-500 rounded-xl p-5 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:shadow-slate-950/40">
             {/* Header */}
             <div className="flex items-center justify-between mb-4">
                 <h3 className="text-base font-bold tracking-tight">{skill.name}</h3>
@@ -86,12 +95,12 @@ export default function SkillCard({
             </div>
 
             {/* Progress bar */}
-            <div className="bg-slate-900 rounded-full h-7 overflow-hidden">
+            <div className="bg-slate-900 rounded-full h-7 overflow-hidden border border-slate-800">
                 <div
-                    className={`h-full rounded-full bg-gradient-to-r ${gradient} flex items-center pl-3 transition-all duration-500 min-w-[44px]`}
-                    style={{ width: `${Math.max(pct, 0)}%` }}
+                    className={`h-full rounded-full bg-gradient-to-r ${gradient} flex items-center pl-3 transition-all duration-[1000ms] ease-out min-w-[44px] ${pct >= 100 ? 'animate-pulse' : ''}`}
+                    style={{ width: `${Math.max(animatedPct, 0)}%` }}
                 >
-                    <span className="text-xs font-mono font-bold text-white whitespace-nowrap">
+                    <span className="text-xs font-mono font-bold text-white whitespace-nowrap drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)]">
                         {pct.toFixed(2)}%
                     </span>
                 </div>
@@ -110,7 +119,7 @@ export default function SkillCard({
                         <button
                             onClick={() => handle(1)}
                             disabled={busy || skill.counter >= skill.total}
-                            className="bg-blue-500 hover:bg-blue-400 disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-bold px-3 py-1.5 rounded-lg transition-all"
+                            className="bg-blue-500 hover:bg-blue-400 active:scale-95 disabled:active:scale-100 disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-bold px-3.5 py-2 rounded-lg transition-all duration-200 hover:shadow-[0_0_12px_rgba(59,130,246,0.4)]"
                         >
                             +1 {skill.unit}
                         </button>
@@ -120,7 +129,7 @@ export default function SkillCard({
                         <button
                             onClick={() => handle(0.5)}
                             disabled={busy || skill.counter >= skill.total}
-                            className="bg-slate-700 hover:bg-slate-600 border border-slate-600 hover:border-blue-400 disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition-all"
+                            className="bg-slate-700 hover:bg-slate-600 border border-slate-600 hover:border-blue-400 active:scale-95 disabled:active:scale-100 disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition-all duration-200 hover:shadow-[0_0_10px_rgba(148,163,184,0.15)]"
                         >
                             +½
                         </button>
@@ -135,12 +144,12 @@ export default function SkillCard({
                                 value={customAmt}
                                 onChange={e => setCustomAmt(e.target.value)}
                                 placeholder="Amt"
-                                className="w-16 bg-slate-900 border border-slate-700 focus:border-blue-500 text-white text-xs font-mono px-2 py-1.5 rounded-lg outline-none"
+                                className="w-16 bg-slate-900 border border-slate-700 focus:border-blue-500 text-white text-xs font-mono px-2 py-1.5 rounded-lg outline-none transition-all duration-200"
                             />
                             <button
                                 onClick={handleCustom}
                                 disabled={busy || !customAmt}
-                                className="bg-slate-700 hover:bg-slate-600 border border-slate-600 disabled:opacity-40 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition-all"
+                                className="bg-slate-700 hover:bg-slate-600 border border-slate-600 active:scale-95 disabled:active:scale-100 disabled:opacity-40 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition-all duration-200 hover:border-slate-500"
                             >
                                 Add
                             </button>
@@ -150,14 +159,14 @@ export default function SkillCard({
                     <button
                         onClick={handleUndo}
                         disabled={busy || skill.counter <= 0}
-                        className="text-slate-400 hover:text-white disabled:opacity-30 text-xs px-2 py-1.5 rounded-lg border border-transparent hover:border-slate-600 transition-all"
+                        className="text-slate-400 hover:text-white hover:bg-slate-700/50 disabled:opacity-30 active:scale-90 disabled:active:scale-100 text-xs px-2.5 py-1.5 rounded-lg border border-transparent hover:border-slate-600 transition-all duration-200"
                     >
                         ↩
                     </button>
 
                     <button
                         onClick={handleDelete}
-                        className="text-red-400 hover:text-red-300 text-xs px-2 py-1.5 rounded-lg border border-transparent hover:border-red-500/40 transition-all"
+                        className="text-red-400 hover:text-red-300 hover:bg-red-500/10 active:scale-90 text-xs px-2.5 py-1.5 rounded-lg border border-transparent hover:border-red-500/30 transition-all duration-200"
                     >
                         ✕
                     </button>

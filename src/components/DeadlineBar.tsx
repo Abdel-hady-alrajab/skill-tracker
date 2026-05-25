@@ -23,7 +23,7 @@ export default function DeadlineBar({
         return (
             <button
                 onClick={onSetDeadline}
-                className="text-blue-400 hover:text-blue-300 text-xs font-mono transition-colors"
+                className="text-blue-400 hover:text-blue-300 text-xs font-mono transition-all duration-200 hover:underline underline-offset-4 active:scale-95"
             >
                 + Set deadline
             </button>
@@ -49,7 +49,7 @@ export default function DeadlineBar({
     })
 
     return (
-        <div className={`flex items-center justify-between flex-wrap gap-2 px-3 py-2 rounded-lg border text-xs font-mono ${barCls}`}>
+        <div className={`flex items-center justify-between flex-wrap gap-2 px-3 py-2 rounded-lg border text-xs font-mono transition-all duration-300 hover:shadow-md ${barCls}`}>
             <div>
                 <span className="font-bold">{daysText}</span>
                 {' · '}
@@ -63,7 +63,7 @@ export default function DeadlineBar({
                 )}
                 <button
                     onClick={onRemove}
-                    className="text-slate-500 hover:text-red-400 transition-colors"
+                    className="text-slate-500 hover:text-red-400 hover:bg-red-500/10 rounded px-1 transition-all duration-200 active:scale-90"
                 >
                     ✕
                 </button>

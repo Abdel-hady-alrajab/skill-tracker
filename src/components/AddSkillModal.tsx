@@ -92,7 +92,7 @@ export default function AddSkillModal({ isOpen, onClose, onAdd }: AddSkillModalP
             {/* Modal */}
             <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
                 <div
-                    className="bg-slate-800 border border-slate-700 rounded-2xl p-7 w-full max-w-md shadow-2xl pointer-events-auto animate-in fade-in slide-in-from-bottom-4 duration-200"
+                    className="bg-slate-800 border border-slate-700 rounded-2xl p-7 w-full max-w-md shadow-2xl pointer-events-auto animate-scale-in-spring"
                     onClick={e => e.stopPropagation()}
                 >
                     {/* Header */}
@@ -208,14 +208,14 @@ export default function AddSkillModal({ isOpen, onClose, onAdd }: AddSkillModalP
                     <div className="flex gap-3 justify-end">
                         <button
                             onClick={handleClose}
-                            className="text-sm font-semibold text-slate-400 border border-slate-700 hover:border-slate-500 px-5 py-2.5 rounded-xl transition-all"
+                            className="text-sm font-semibold text-slate-400 border border-slate-700 hover:border-slate-500 px-5 py-2.5 rounded-xl active:scale-95 transition-all duration-200"
                         >
                             Cancel
                         </button>
                         <button
                             onClick={handleCreate}
                             disabled={loading}
-                            className="bg-blue-500 hover:bg-blue-400 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-bold px-5 py-2.5 rounded-xl transition-all"
+                            className="bg-blue-500 hover:bg-blue-400 disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 disabled:active:scale-100 text-white text-sm font-bold px-5 py-2.5 rounded-xl transition-all duration-200"
                         >
                             {loading ? 'Creating…' : 'Create Tracker'}
                         </button>

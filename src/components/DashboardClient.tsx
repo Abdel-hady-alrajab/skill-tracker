@@ -22,6 +22,43 @@ interface Props {
     userId: string
 }
 
+function AnimatedNumber({ value }: { value: number | string }) {
+    const strVal = String(value)
+    const match = strVal.match(/^(\d+(?:\.\d+)?)(.*)$/)
+    const target = match ? parseFloat(match[1]) : 0
+    const suffix = match ? match[2] : ''
+
+    const [current, setCurrent] = useState(0)
+
+    useEffect(() => {
+        let startTime = performance.now()
+        const duration = 1200 // smooth count up duration
+        let animationFrameId: number
+
+        const update = (now: number) => {
+            const progress = Math.min((now - startTime) / duration, 1)
+            const ease = 1 - Math.pow(1 - progress, 4) // easeOutQuart
+            setCurrent(Math.floor(ease * target))
+
+            if (progress < 1) {
+                animationFrameId = requestAnimationFrame(update)
+            } else {
+                setCurrent(target)
+            }
+        }
+
+        animationFrameId = requestAnimationFrame(update)
+        return () => cancelAnimationFrame(animationFrameId)
+    }, [target])
+
+    return (
+        <span>
+            {current}
+            {suffix}
+        </span>
+    )
+}
+
 export default function DashboardClient({ userId }: Props) {
     const supabase = useRef(createClient()).current
 
@@ -224,6 +261,15 @@ export default function DashboardClient({ userId }: Props) {
     const completedSkills = skills.filter(s => s.counter >= s.total).length
     const overallPct = totalUnits > 0 ? (doneUnits / totalUnits) * 100 : 0
 
+    const [animatedOverallPct, setAnimatedOverallPct] = useState(0)
+
+    useEffect(() => {
+        const t = setTimeout(() => {
+            setAnimatedOverallPct(overallPct)
+        }, 100)
+        return () => clearTimeout(t)
+    }, [overallPct])
+
     const activeSkills = skills.filter(s => s.counter < s.total)
     const completedSkillsList = skills.filter(s => s.counter >= s.total)
 
@@ -239,23 +285,23 @@ export default function DashboardClient({ userId }: Props) {
         <div className="space-y-6">
 
             {/* Overall progress bar */}
-            <div className="bg-slate-800 border border-slate-700 rounded-xl p-5">
+            <div className="bg-slate-800 border border-slate-700 rounded-xl p-5 animate-fade-in-up delay-0 hover:shadow-xl transition-all duration-300">
                 <div className="flex items-center justify-between mb-2 flex-wrap gap-2">
                     <span className="text-sm font-bold">Overall Progress</span>
                     <span className="text-xs font-mono text-slate-400">
                         {overallPct.toFixed(1)}% across all skills
                     </span>
                 </div>
-                <div className="bg-slate-900 rounded-full h-4 overflow-hidden">
+                <div className="bg-slate-900 rounded-full h-4 overflow-hidden border border-slate-800">
                     <div
-                        className="h-full rounded-full bg-gradient-to-r from-blue-700 to-blue-400 transition-all duration-700"
-                        style={{ width: `${overallPct}%` }}
+                        className="h-full rounded-full bg-gradient-to-r from-blue-700 to-blue-400 transition-all duration-[1000ms] ease-out"
+                        style={{ width: `${animatedOverallPct}%` }}
                     />
                 </div>
             </div>
 
             {/* Stat cards */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 animate-fade-in-up delay-75">
                 {[
                     { label: 'Skills Tracked', value: skills.length, icon: '📚' },
                     { label: 'Completed', value: completedSkills, icon: '✅' },
@@ -263,35 +309,41 @@ export default function DashboardClient({ userId }: Props) {
                     { label: 'Units Left', value: leftUnits, icon: '🎯' },
                     { label: 'Best Streak', value: `${stats.streak_best}d`, icon: streakActive ? '🔥' : '💤' },
                 ].map(({ label, value, icon }) => (
-                    <div key={label} className="bg-slate-800 border border-slate-700 rounded-xl p-4 text-center">
-                        <div className="text-2xl leading-none mb-1">{icon}</div>
-                        <div className="text-xl font-extrabold font-mono">{value}</div>
+                    <div key={label} className="bg-slate-800 border border-slate-700 rounded-xl p-4 text-center transition-all duration-300 hover:border-slate-500 hover:-translate-y-0.5 hover:shadow-md group">
+                        <div className="text-2xl leading-none mb-1 transition-transform duration-300 group-hover:scale-110">{icon}</div>
+                        <div className="text-xl font-extrabold font-mono"><AnimatedNumber value={value} /></div>
                         <div className="text-[11px] font-mono text-slate-500 mt-1">{label}</div>
                     </div>
                 ))}
             </div>
 
             {/* Coin Shop */}
-            <CoinShop
-                coins={stats.coins}
-                freezes={stats.streak_freezes}
-                boosterLeft={stats.booster_left}
-                deadlineUnlocked={stats.deadline_unlocked}
-                onBuyFreeze={buyFreeze}
-                onBuyBooster={buyBooster}
-                onBuyDeadline={buyDeadlineTracker}
-                onOpenDeadlineModal={() => openDeadlineModal()}
-                onToast={showToast}
-            />
+            <div className="animate-fade-in-up delay-150">
+                <CoinShop
+                    coins={stats.coins}
+                    freezes={stats.streak_freezes}
+                    boosterLeft={stats.booster_left}
+                    deadlineUnlocked={stats.deadline_unlocked}
+                    onBuyFreeze={buyFreeze}
+                    onBuyBooster={buyBooster}
+                    onBuyDeadline={buyDeadlineTracker}
+                    onOpenDeadlineModal={() => openDeadlineModal()}
+                    onToast={showToast}
+                />
+            </div>
 
             {/* Activity Heatmap */}
-            <ActivityHeatmap log={log} />
+            <div className="animate-fade-in-up delay-225">
+                <ActivityHeatmap log={log} />
+            </div>
 
             {/* Charts */}
-            <Charts skills={skills} weeklyData={getWeeklyData()} />
+            <div className="animate-fade-in-up delay-300">
+                <Charts skills={skills} weeklyData={getWeeklyData()} />
+            </div>
 
             {/* Skill cards */}
-            <div>
+            <div className="animate-fade-in-up delay-375">
                 <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
                     <h2 className="text-base font-bold">Your Skills</h2>
                     <div className="flex items-center gap-2">
@@ -299,14 +351,14 @@ export default function DashboardClient({ userId }: Props) {
                             <button
                                 onClick={importLegacySkills}
                                 disabled={importing}
-                                className="bg-emerald-700 hover:bg-emerald-600 disabled:opacity-50 text-white text-xs font-bold px-4 py-2 rounded-lg transition-all"
+                                className="bg-emerald-700 hover:bg-emerald-600 disabled:opacity-50 text-white text-xs font-bold px-4 py-2 rounded-lg transition-all active:scale-95 disabled:active:scale-100 duration-200"
                             >
                                 {importing ? 'Importing…' : '📥 Import Previous Skills'}
                             </button>
                         )}
                         <button
                             onClick={() => setAddSkillOpen(true)}
-                            className="bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold px-4 py-2 rounded-lg transition-all"
+                            className="bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold px-4 py-2 rounded-lg transition-all active:scale-95 disabled:active:scale-100 duration-200 hover:shadow-[0_0_12px_rgba(59,130,246,0.3)]"
                         >
                             + Add Skill
                         </button>
@@ -314,7 +366,7 @@ export default function DashboardClient({ userId }: Props) {
                 </div>
 
                 {activeSkills.length === 0 && completedSkillsList.length === 0 ? (
-                    <div className="text-center py-16 text-slate-500 font-mono text-sm border border-dashed border-slate-700 rounded-xl">
+                    <div className="text-center py-16 text-slate-500 font-mono text-sm border border-dashed border-slate-700 rounded-xl transition-all duration-300">
                         No skills yet — click &quot;+ Add Skill&quot; to get started!
                     </div>
                 ) : (
@@ -338,7 +390,7 @@ export default function DashboardClient({ userId }: Props) {
 
             {/* Completed skills */}
             {completedSkillsList.length > 0 && (
-                <div>
+                <div className="animate-fade-in-up delay-450">
                     <h3 className="text-xs font-mono text-slate-500 mb-3 uppercase tracking-widest">
                         Completed
                     </h3>
@@ -346,7 +398,7 @@ export default function DashboardClient({ userId }: Props) {
                         {completedSkillsList.map(skill => (
                             <span
                                 key={skill.id}
-                                className="bg-slate-800 border border-emerald-700/50 text-emerald-400 text-xs font-mono px-3 py-1.5 rounded-full"
+                                className="bg-slate-800 border border-emerald-700/50 text-emerald-400 text-xs font-mono px-3 py-1.5 rounded-full hover:bg-slate-700 transition-all duration-300 hover:scale-105 cursor-default"
                             >
                                 ✓ {skill.name}
                             </span>
@@ -377,7 +429,7 @@ export default function DashboardClient({ userId }: Props) {
 
             {/* Toast notification */}
             {toast && (
-                <div className="fixed bottom-6 right-6 bg-slate-800 border border-slate-700 text-white text-sm font-mono px-4 py-3 rounded-xl shadow-xl z-40">
+                <div className="fixed bottom-6 right-6 bg-slate-800 border border-slate-700 text-white text-sm font-mono px-4 py-3 rounded-xl shadow-xl z-40 animate-scale-in-spring hover:scale-105 transition-transform duration-300">
                     {toast}
                 </div>
             )}

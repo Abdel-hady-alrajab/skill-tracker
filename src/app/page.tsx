@@ -12,13 +12,13 @@ export default async function LandingPage() {
   return (
     <main className="min-h-screen bg-slate-900 flex flex-col">
       {/* Nav */}
-      <nav className="flex items-center justify-between px-6 py-5 max-w-6xl mx-auto w-full">
-        <span className="text-xl font-extrabold tracking-tight bg-gradient-to-r from-blue-400 to-emerald-400 bg-clip-text text-transparent">
+      <nav className="flex items-center justify-between px-6 py-5 max-w-6xl mx-auto w-full animate-fade-in-up delay-0">
+        <span className="text-xl font-extrabold tracking-tight bg-gradient-to-r from-blue-400 to-emerald-400 bg-clip-text text-transparent hover:from-emerald-400 hover:to-blue-400 transition-all duration-500">
           Skill Tracker
         </span>
         <Link
           href="/login"
-          className="text-sm font-semibold text-slate-300 hover:text-white transition-colors"
+          className="text-sm font-semibold text-slate-300 hover:text-white transition-all duration-300 hover:translate-x-1"
         >
           Sign in →
         </Link>
@@ -26,11 +26,11 @@ export default async function LandingPage() {
 
       {/* Hero */}
       <div className="flex-1 flex flex-col items-center justify-center text-center px-6 pb-24">
-        <div className="inline-flex items-center gap-2 bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-mono px-4 py-2 rounded-full mb-8 tracking-widest uppercase">
+        <div className="inline-flex items-center gap-2 bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-mono px-4 py-2 rounded-full mb-8 tracking-widest uppercase animate-fade-in-up delay-150 animate-shimmer">
           🔥 Build real habits. Track real progress.
         </div>
 
-        <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight leading-tight max-w-3xl">
+        <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight leading-tight max-w-3xl animate-fade-in-up delay-300">
           Track every{' '}
           <span className="bg-gradient-to-r from-blue-400 to-emerald-400 bg-clip-text text-transparent">
             skill.
@@ -42,15 +42,15 @@ export default async function LandingPage() {
           </span>
         </h1>
 
-        <p className="mt-6 text-lg text-slate-400 max-w-xl leading-relaxed">
+        <p className="mt-6 text-lg text-slate-400 max-w-xl leading-relaxed animate-fade-in-up delay-450">
           A personal dashboard for tracking Quran, courses, languages, coding — anything.
           With streaks, coins, heatmaps, charts, and deadlines to keep you moving.
         </p>
 
-        <div className="flex flex-col sm:flex-row items-center gap-4 mt-10">
+        <div className="flex flex-col sm:flex-row items-center gap-4 mt-10 animate-fade-in-up delay-600">
           <Link
             href="/login"
-            className="bg-blue-500 hover:bg-blue-400 text-white font-bold text-base px-8 py-4 rounded-xl transition-all hover:-translate-y-0.5 shadow-lg shadow-blue-500/25"
+            className="bg-blue-500 hover:bg-blue-400 text-white font-bold text-base px-8 py-4 rounded-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-xl shadow-lg shadow-blue-500/25 active:scale-95"
           >
             Get started free →
           </Link>
@@ -68,10 +68,10 @@ export default async function LandingPage() {
             '🗓️ Activity heatmap',
             '📅 Deadlines',
             '☁️ Cloud sync',
-          ].map(f => (
+          ].map((f, i) => (
             <span
               key={f}
-              className="bg-slate-800 border border-slate-700 text-slate-300 text-sm font-mono px-4 py-2 rounded-full"
+              className={`bg-slate-800 border border-slate-700 text-slate-300 text-sm font-mono px-4 py-2 rounded-full hover:border-slate-500 hover:bg-slate-700/50 hover:-translate-y-0.5 transition-all duration-300 animate-fade-in-up delay-${700 + i * 100}`}
             >
               {f}
             </span>

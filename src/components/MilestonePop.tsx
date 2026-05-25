@@ -35,12 +35,12 @@ export default function MilestonePop({ data, visible }: MilestonePopProps) {
             className={`
                 fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2
                 bg-slate-800 border border-slate-700 rounded-2xl py-7 px-10
-                text-center z-50 pointer-events-none
-                transition-all duration-[250ms]
-                ${visible ? 'opacity-100 scale-100' : 'opacity-0 scale-75'}
+                text-center z-50 pointer-events-none shadow-2xl
+                transition-all duration-500
+                ${visible ? 'opacity-100 scale-100 shadow-[0_0_40px_rgba(59,130,246,0.2)]' : 'opacity-0 scale-50'}
             `}
         >
-            <div className="text-5xl leading-none mb-3">{data.icon}</div>
+            <div className={`text-5xl leading-none mb-3 ${visible ? 'animate-gentle-float' : ''}`}>{data.icon}</div>
             <div className="text-lg font-extrabold mb-1">{data.title}</div>
             <div className="text-sm font-mono text-slate-400">{data.sub}</div>
         </div>
