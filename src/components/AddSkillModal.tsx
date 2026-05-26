@@ -18,12 +18,12 @@ const COLOR_SWATCHES: Record<Color, string> = {
 
 interface AddSkillModalProps {
     isOpen: boolean
+    prefilledName?: string
     onClose: () => void
     onAdd: (skill: NewSkill) => Promise<void>
 }
 
-export default function AddSkillModal({ isOpen, onClose, onAdd }: AddSkillModalProps) {
-    const [name, setName] = useState('')
+export default function AddSkillModal({ isOpen, prefilledName, onClose, onAdd }: AddSkillModalProps) {
     const [total, setTotal] = useState('')
     const [unit, setUnit] = useState('')
     const [incOne, setIncOne] = useState(true)
@@ -32,7 +32,8 @@ export default function AddSkillModal({ isOpen, onClose, onAdd }: AddSkillModalP
     const [color, setColor] = useState<Color>('blue')
     const [error, setError] = useState<string | null>(null)
     const [loading, setLoading] = useState(false)
-
+    const [name, setName] = useState(prefilledName ?? '')
+    useEffect(() => { if (prefilledName) setName(prefilledName) }, [prefilledName])
     // Close on Escape key
     useEffect(() => {
         function handleKey(e: KeyboardEvent) {

@@ -17,6 +17,8 @@ import CoinShop from '@/components/CoinShop'
 import ActivityHeatmap from '@/components/HeatMap'
 import Charts from '@/components/Charts'
 import { checkMilestones, getMilestonesReached } from '@/lib/milestones'
+import { useTodoSkills } from '@/app/hooks/useTodoSkills'
+import TodoSkills from '@/components/TodoSkills'
 
 interface Props {
     userId: string
@@ -76,7 +78,10 @@ export default function DashboardClient({ userId }: Props) {
     const { log, logActivity } = useActivityLog(userId)
     const { logIncrement, getWeeklyData } = useIncrementLog(userId)
     const { data: milestoneData, visible: milestoneVisible, triggerMilestone } = useMilestone()
-
+    const {
+        todos, loading: todosLoading,
+        addTodos, deleteTodo, promoteToSkill,
+    } = useTodoSkills(userId)
     const [addSkillOpen, setAddSkillOpen] = useState(false)
     const [deadlineModalOpen, setDeadlineModalOpen] = useState(false)
     const [deadlineSkillId, setDeadlineSkillId] = useState<string | null>(null)
@@ -84,27 +89,28 @@ export default function DashboardClient({ userId }: Props) {
     const [prevCounters, setPrevCounters] = useState<Record<string, number>>({})
     const [toast, setToast] = useState<string | null>(null)
     const [importing, setImporting] = useState(false)
+    const [prefilledName, setPrefilledName] = useState('')
 
     // ── Legacy skills (pre-completed) ────────────────────────────────────
     const LEGACY_SKILLS = [
-        { name: 'Tailwind',         total: 100, unit: '%', color: 'teal'   },
-        { name: 'CORS',             total: 100, unit: '%', color: 'orange' },
-        { name: 'Task Runners',     total: 100, unit: '%', color: 'red'    },
-        { name: 'Webpack',          total: 100, unit: '%', color: 'purple' },
-        { name: 'Jira',             total: 100, unit: '%', color: 'blue'   },
-        { name: 'Cypress Testing',  total: 100, unit: '%', color: 'green'  },
-        { name: 'TypeScript',       total: 100, unit: '%', color: 'blue'   },
-        { name: 'PWA',              total: 100, unit: '%', color: 'pink'   },
-        { name: 'Next.js',          total: 100, unit: '%', color: 'teal'   },
-        { name: 'Node',             total: 100, unit: '%', color: 'green'  },
-        { name: 'React Native',     total: 100, unit: '%', color: 'purple' },
-        { name: 'Programming',      total: 100, unit: '%', color: 'orange' },
-        { name: 'GTmetrix',         total: 100, unit: '%', color: 'red'    },
-        { name: 'Agile / Coursera', total: 100, unit: '%', color: 'blue'   },
-        { name: 'Chrome DevTools',  total: 100, unit: '%', color: 'teal'   },
-        { name: 'Mock Interviews',  total: 100, unit: '%', color: 'pink'   },
-        { name: 'Material UI',      total: 100, unit: '%', color: 'purple' },
-        { name: 'AI Tutorials',     total: 100, unit: '%', color: 'green'  },
+        { name: 'Tailwind', total: 100, unit: '%', color: 'teal' },
+        { name: 'CORS', total: 100, unit: '%', color: 'orange' },
+        { name: 'Task Runners', total: 100, unit: '%', color: 'red' },
+        { name: 'Webpack', total: 100, unit: '%', color: 'purple' },
+        { name: 'Jira', total: 100, unit: '%', color: 'blue' },
+        { name: 'Cypress Testing', total: 100, unit: '%', color: 'green' },
+        { name: 'TypeScript', total: 100, unit: '%', color: 'blue' },
+        { name: 'PWA', total: 100, unit: '%', color: 'pink' },
+        { name: 'Next.js', total: 100, unit: '%', color: 'teal' },
+        { name: 'Node', total: 100, unit: '%', color: 'green' },
+        { name: 'React Native', total: 100, unit: '%', color: 'purple' },
+        { name: 'Programming', total: 100, unit: '%', color: 'orange' },
+        { name: 'GTmetrix', total: 100, unit: '%', color: 'red' },
+        { name: 'Agile / Coursera', total: 100, unit: '%', color: 'blue' },
+        { name: 'Chrome DevTools', total: 100, unit: '%', color: 'teal' },
+        { name: 'Mock Interviews', total: 100, unit: '%', color: 'pink' },
+        { name: 'Material UI', total: 100, unit: '%', color: 'purple' },
+        { name: 'AI Tutorials', total: 100, unit: '%', color: 'green' },
     ]
 
     const alreadyImported = typeof window !== 'undefined'
@@ -208,6 +214,14 @@ export default function DashboardClient({ userId }: Props) {
             delete n[skillId]
             return n
         })
+    }
+
+    async function handlePromote(id: string) {
+        const name = await promoteToSkill(id)
+        if (name) {
+            setPrefilledName(name)
+            setAddSkillOpen(true)
+        }
     }
 
     async function handleSaveDeadline(skillId: string, dateStr: string) {
@@ -407,13 +421,31 @@ export default function DashboardClient({ userId }: Props) {
                 </div>
             )}
 
+            {/* Skill Queue */}
+            <TodoSkills
+                todos={todos}
+                loading={todosLoading}
+                onAdd={addTodos}
+                onDelete={deleteTodo}
+                onPromote={handlePromote}
+            />
+
             {/* Modals */}
             <AddSkillModal
                 isOpen={addSkillOpen}
-                onClose={() => setAddSkillOpen(false)}
+                prefilledName={prefilledName}
+                onClose={() => {
+                    setAddSkillOpen(false);
+                    setPrefilledName('');
+                }}
                 onAdd={async (newSkill) => {
-                    await addSkill(newSkill)
-                    setAddSkillOpen(false)
+                    // Explicitly handle the action so it returns Promise<void> matching your modal's expected type
+                    const error = await addSkill(newSkill);
+                    if (error) {
+                        console.error("Failed to add skill:", error);
+                        // Optional: Handle your Supabase error here (e.g., toast notification)
+                    }
+                    setAddSkillOpen(false);
                 }}
             />
 
