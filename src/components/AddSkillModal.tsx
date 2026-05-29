@@ -119,7 +119,7 @@ export default function AddSkillModal({ isOpen, prefilledName, onClose, onAdd }:
                             type="text"
                             value={name}
                             onChange={e => setName(e.target.value)}
-                            placeholder="e.g. Quran, React, Arabic…"
+                            placeholder="e.g. Quran, React…"
                             autoFocus
                             className="w-full bg-slate-900 border border-slate-700 focus:border-blue-500 text-white placeholder-slate-600 rounded-xl px-4 py-3 text-sm outline-none transition-colors"
                         />

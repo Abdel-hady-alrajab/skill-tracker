@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Navbar from '@/components/Navbar'
+import { TimeTrackerProvider } from '@/app/contexts/TimeTrackerContext'
 
 export default async function DashboardLayout({
     children,
@@ -25,7 +26,8 @@ export default async function DashboardLayout({
     const streakActive = stats?.streak_last_date === todayStr
 
     return (
-        <div className="min-h-screen bg-slate-900">
+        <TimeTrackerProvider userId={user.id}>
+            <div className="min-h-screen bg-slate-900">
             <Navbar
                 userId={user.id}
                 email={user.email ?? ''}
@@ -38,5 +40,6 @@ export default async function DashboardLayout({
                 {children}
             </main>
         </div>
+        </TimeTrackerProvider>
     )
 }

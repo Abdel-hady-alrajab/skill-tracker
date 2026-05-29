@@ -104,8 +104,8 @@ export default function TodoSkills({
                 <button
                     onClick={() => { setShowInput(v => !v); setError(null) }}
                     className={`flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg border transition-all duration-200 active:scale-95 ${showInput
-                            ? 'bg-slate-700 border-slate-600 text-slate-300 hover:border-slate-500'
-                            : 'bg-blue-500 border-blue-500 text-white hover:bg-blue-400 hover:shadow-lg hover:shadow-blue-500/25 hover:-translate-y-0.5'
+                        ? 'bg-slate-700 border-slate-600 text-slate-300 hover:border-slate-500'
+                        : 'bg-blue-500 border-blue-500 text-white hover:bg-blue-400 hover:shadow-lg hover:shadow-blue-500/25 hover:-translate-y-0.5'
                         }`}
                 >
                     <svg
@@ -135,7 +135,7 @@ export default function TodoSkills({
                         value={input}
                         onChange={handleInputChange}
                         onKeyDown={handleKeyDown}
-                        placeholder={`e.g.\nReact Native\nAlgorithms\nArabic Grammar`}
+                        placeholder={`e.g.\nReact Native\nAlgorithms`}
                         rows={3}
                         className="w-full bg-transparent border-none outline-none text-white placeholder-slate-600 text-sm font-mono resize-none leading-relaxed min-h-[72px]"
                         style={{ height: 'auto' }}
@@ -222,8 +222,8 @@ export default function TodoSkills({
                         return (
                             <li
                                 key={todo.id}
-                                className={`group flex items-center gap-3 bg-slate-900/60 hover:bg-slate-900 border border-slate-700/50 hover:border-slate-600 rounded-lg px-3 py-2.5 transition-all duration-200 animate-fade-in-up ${isDeleting ? 'opacity-0 scale-95 translate-x-4' :
-                                        isPromoting ? 'opacity-0 scale-95 -translate-x-4' : ''
+                                className={`group flex items-center gap-3 bg-slate-900/60 dark:bg-gray-400/10 hover:bg-slate-900 border border-slate-700/50 hover:border-slate-600 rounded-lg px-3 py-2.5 transition-all duration-200 animate-fade-in-up ${isDeleting ? 'opacity-0 scale-95 translate-x-4' :
+                                    isPromoting ? 'opacity-0 scale-95 -translate-x-4' : ''
                                     }`}
                                 style={{ animationDelay: `${index * 40}ms` }}
                             >

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { useTheme } from '@/components/ThemeProvider'
+import { useTimeTracker } from '@/app/contexts/TimeTrackerContext'
 
 interface NavbarProps {
     userId: string
@@ -35,6 +36,14 @@ export default function Navbar({
     const [streakCount, setStreakCount] = useState(initialStreakCount)
     const [streakActive, setStreakActive] = useState(initialStreakActive)
     const [freezes, setFreezes] = useState(initialFreezes)
+
+    const { sessionsData, categoriesData } = useTimeTracker()
+    const { activeSession, elapsedSeconds, formatElapsed } = sessionsData
+    const { categories } = categoriesData
+
+    const activeCategory = activeSession 
+        ? categories.find(c => c.id === activeSession.category_id)
+        : null
 
     // Subscribe to real-time user_stats changes so coins/streak stay in sync
     useEffect(() => {
@@ -76,6 +85,22 @@ export default function Navbar({
 
                 {/* Stats */}
                 <div className="flex items-center gap-3 sm:gap-5 text-sm font-mono flex-wrap">
+                    {/* Live Timer */}
+                    {activeSession && activeCategory && (
+                        <div className="hidden sm:flex items-center gap-2 bg-slate-800/80 border border-slate-700 px-3 py-1 rounded-full animate-fade-in text-xs font-semibold cursor-default hover:bg-slate-700/80 transition-colors">
+                            <span className="relative flex-shrink-0 flex h-2 w-2">
+                                <span className="absolute inline-flex h-full w-full rounded-full opacity-75 animate-ping" style={{ backgroundColor: activeCategory.color }} />
+                                <span className="relative inline-flex rounded-full h-2 w-2" style={{ backgroundColor: activeCategory.color }} />
+                            </span>
+                            <span style={{ color: activeCategory.color }}>
+                                {activeCategory.name}
+                            </span>
+                            <span className="text-white tabular-nums ml-1">
+                                {formatElapsed(elapsedSeconds)}
+                            </span>
+                        </div>
+                    )}
+
                     {/* Streak */}
                     <div className="flex items-center gap-1.5 text-slate-400 group cursor-default">
                         <span className={`text-base transition-transform duration-300 ${streakActive ? 'group-hover:scale-125 group-hover:rotate-12' : 'group-hover:-rotate-12'}`}>{streakActive ? '🔥' : '💤'}</span>

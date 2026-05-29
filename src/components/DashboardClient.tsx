@@ -19,6 +19,8 @@ import Charts from '@/components/Charts'
 import { checkMilestones, getMilestonesReached } from '@/lib/milestones'
 import { useTodoSkills } from '@/app/hooks/useTodoSkills'
 import TodoSkills from '@/components/TodoSkills'
+import TimeStatsDashboard from '@/components/TimeStatsDashboard'
+
 
 interface Props {
     userId: string
@@ -353,7 +355,7 @@ export default function DashboardClient({ userId }: Props) {
 
             {/* Charts */}
             <div className="animate-fade-in-up delay-300">
-                <Charts skills={skills} weeklyData={getWeeklyData()} />
+                <Charts skills={activeSkills} weeklyData={getWeeklyData()} />
             </div>
 
             {/* Skill cards */}
@@ -429,6 +431,15 @@ export default function DashboardClient({ userId }: Props) {
                 onDelete={deleteTodo}
                 onPromote={handlePromote}
             />
+
+            {/* Time Tracker Section */}
+            <div className="animate-fade-in-up delay-500">
+                <div className="flex items-center gap-2 mb-4">
+                    <span className="text-xl">⏳</span>
+                    <h2 className="text-base font-bold">Time Tracker</h2>
+                </div>
+                <TimeStatsDashboard userId={userId} />
+            </div>
 
             {/* Modals */}
             <AddSkillModal

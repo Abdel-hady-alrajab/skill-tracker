@@ -51,7 +51,7 @@ export default function CoinShop({
                 <span className="text-sm font-bold flex items-center gap-1.5 hover:scale-105 transition-transform duration-300 cursor-default">
                     🏪 <span className="bg-gradient-to-r from-amber-400 to-yellow-200 bg-clip-text text-transparent font-extrabold">Coin Shop</span>
                 </span>
-                <span className="text-xs font-mono text-slate-400 bg-slate-900/50 px-2.5 py-1 rounded-full border border-slate-750">
+                <span className="text-xs font-mono text-slate-400  px-2.5 py-1 rounded-full border border-slate-750">
                     Balance: <b className="text-amber-400 animate-pulse">{coins}</b> 🪙
                 </span>
             </div>
