@@ -18,8 +18,8 @@ function localDateStr() {
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 }
 
-export function useUserStats(userId: string) {
-    const [stats, setStats] = useState<UserStats>({
+export function useUserStats(userId: string, initialStats?: UserStats) {
+    const [stats, setStats] = useState<UserStats>(initialStats ?? {
         coins: 0,
         streak_count: 0,
         streak_best: 0,
@@ -31,6 +31,8 @@ export function useUserStats(userId: string) {
     const supabase = createClient()
 
     const fetchStats = useCallback(async () => {
+        // Skip the initial fetch if data was server-provided
+        if (initialStats) return
         const { data } = await supabase
             .from('user_stats')
             .select('*')

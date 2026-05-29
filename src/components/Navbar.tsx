@@ -129,6 +129,7 @@ export default function Navbar({
                     {/* Theme toggle */}
                     <button
                         onClick={toggle}
+                        aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
                         title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
                         className="border text-sm px-2.5 py-1.5 rounded-lg transition-all duration-300 hover:scale-110 active:scale-95 hover:shadow-md"
                         style={{
@@ -144,6 +145,7 @@ export default function Navbar({
                     {/* Sign out */}
                     <button
                         onClick={signOut}
+                        aria-label="Sign out of your account"
                         className="text-slate-400 hover:text-white border border-slate-700 hover:border-slate-500 hover:bg-slate-800 text-xs px-3 py-1.5 rounded-lg transition-all duration-300 hover:shadow-[0_0_10px_rgba(255,255,255,0.05)] active:scale-95"
                     >
                         Sign out

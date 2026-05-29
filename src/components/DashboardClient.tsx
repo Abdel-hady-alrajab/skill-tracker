@@ -5,25 +5,43 @@ import { createClient } from '@/lib/supabase/client'
 import { useSkills } from '@/app/hooks/useSkills'
 import type { Skill } from '@/app/hooks/useSkills'
 import { useUserStats } from '@/app/hooks/useUserStats'
+import type { UserStats } from '@/app/hooks/useUserStats'
 import { useActivityLog } from '@/app/hooks/useActivityLog'
 import { useIncrementLog } from '@/app/hooks/useIncrementLog'
 import { useMilestone } from '@/components/MilestonePop'
+import type { TodoSkill } from '@/app/hooks/useTodoSkills'
 import MilestonePop from '@/components/MilestonePop'
 import AddSkillModal from '@/components/AddSkillModal'
 import DeadlineModal from '@/components/DeadlineModal'
 import SkillCard from '@/components/SkillCard'
 import type { DeadlineInfo } from '@/components/SkillCard'
 import CoinShop from '@/components/CoinShop'
-import ActivityHeatmap from '@/components/HeatMap'
-import Charts from '@/components/Charts'
 import { checkMilestones, getMilestonesReached } from '@/lib/milestones'
 import { useTodoSkills } from '@/app/hooks/useTodoSkills'
 import TodoSkills from '@/components/TodoSkills'
-import TimeStatsDashboard from '@/components/TimeStatsDashboard'
+import dynamic from 'next/dynamic'
+
+const ActivityHeatmap = dynamic(() => import('@/components/HeatMap'), {
+    loading: () => <div className="h-48 w-full animate-pulse bg-slate-800 rounded-xl"></div>,
+    ssr: false
+})
+
+const Charts = dynamic(() => import('@/components/Charts'), {
+    loading: () => <div className="h-64 w-full animate-pulse bg-slate-800 rounded-xl"></div>,
+    ssr: false
+})
+
+const TimeStatsDashboard = dynamic(() => import('@/components/TimeStatsDashboard'), {
+    loading: () => <div className="h-64 w-full animate-pulse bg-slate-800 rounded-xl"></div>,
+    ssr: false
+})
 
 
 interface Props {
     userId: string
+    initialSkills?: Skill[]
+    initialStats?: UserStats
+    initialTodos?: TodoSkill[]
 }
 
 function AnimatedNumber({ value }: { value: number | string }) {
@@ -63,10 +81,10 @@ function AnimatedNumber({ value }: { value: number | string }) {
     )
 }
 
-export default function DashboardClient({ userId }: Props) {
+export default function DashboardClient({ userId, initialSkills, initialStats, initialTodos }: Props) {
     const supabase = useRef(createClient()).current
 
-    const { skills, loading, addSkill, deleteSkill, updateCounter } = useSkills(userId)
+    const { skills, loading, addSkill, deleteSkill, updateCounter } = useSkills(userId, initialSkills)
     const {
         stats,
         streakActive,
@@ -76,14 +94,14 @@ export default function DashboardClient({ userId }: Props) {
         buyBooster,
         buyDeadlineTracker,
         refetch: refetchStats,
-    } = useUserStats(userId)
+    } = useUserStats(userId, initialStats)
     const { log, logActivity } = useActivityLog(userId)
     const { logIncrement, getWeeklyData } = useIncrementLog(userId)
     const { data: milestoneData, visible: milestoneVisible, triggerMilestone } = useMilestone()
     const {
         todos, loading: todosLoading,
         addTodos, deleteTodo, promoteToSkill,
-    } = useTodoSkills(userId)
+    } = useTodoSkills(userId, initialTodos)
     const [addSkillOpen, setAddSkillOpen] = useState(false)
     const [deadlineModalOpen, setDeadlineModalOpen] = useState(false)
     const [deadlineSkillId, setDeadlineSkillId] = useState<string | null>(null)
@@ -361,7 +379,7 @@ export default function DashboardClient({ userId }: Props) {
             {/* Skill cards */}
             <div className="animate-fade-in-up delay-375">
                 <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
-                    <h2 className="text-base font-bold">Your Skills</h2>
+                    <h1 className="text-base font-bold">Your Skills</h1>
                     <div className="flex items-center gap-2">
                         {legacyNotYetAdded && (
                             <button

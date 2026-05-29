@@ -4,13 +4,15 @@ const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://skill-tracker.verce
 
 export default function robots(): MetadataRoute.Robots {
   return {
-    rules: [
-      {
-        userAgent: '*',
-        allow: ['/', '/login'],
-        disallow: ['/dashboard', '/api'],
-      },
-    ],
+    rules: {
+      userAgent: '*',
+      allow: '/',
+      disallow: [
+        '/dashboard', // Private user route
+        '/api/',       // Backend API handlers
+        '/auth/',      // Authentication callback pathways
+      ],
+    },
     sitemap: `${siteUrl}/sitemap.xml`,
   }
 }

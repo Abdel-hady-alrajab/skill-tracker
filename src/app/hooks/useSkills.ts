@@ -25,9 +25,9 @@ export interface NewSkill {
     has_custom: boolean
 }
 
-export function useSkills(userId: string) {
-    const [skills, setSkills] = useState<Skill[]>([])
-    const [loading, setLoading] = useState(true)
+export function useSkills(userId: string, initialSkills?: Skill[]) {
+    const [skills, setSkills] = useState<Skill[]>(initialSkills ?? [])
+    const [loading, setLoading] = useState(!initialSkills)
     const supabase = createClient()
 
     const blockFetch = useRef(false)

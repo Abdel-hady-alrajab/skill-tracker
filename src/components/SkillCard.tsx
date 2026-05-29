@@ -159,6 +159,7 @@ export default function SkillCard({
                     <button
                         onClick={handleUndo}
                         disabled={busy || skill.counter <= 0}
+                        aria-label={`Undo last increment for ${skill.name}`}
                         className="text-slate-400 hover:text-white hover:bg-slate-700/50 disabled:opacity-30 active:scale-90 disabled:active:scale-100 text-xs px-2.5 py-1.5 rounded-lg border border-transparent hover:border-slate-600 transition-all duration-200"
                     >
                         ↩
@@ -166,6 +167,7 @@ export default function SkillCard({
 
                     <button
                         onClick={handleDelete}
+                        aria-label={`Delete ${skill.name}`}
                         className="text-red-400 hover:text-red-300 hover:bg-red-500/10 active:scale-90 text-xs px-2.5 py-1.5 rounded-lg border border-transparent hover:border-red-500/30 transition-all duration-200"
                     >
                         ✕

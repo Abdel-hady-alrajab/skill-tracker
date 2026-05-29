@@ -1,6 +1,32 @@
+import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
+
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://skill-tracker.vercel.app'
+
+export const metadata: Metadata = {
+  title: 'Track every skill, build every habit',
+  description:
+    'Skill Tracker is a personal dashboard for tracking Quran, coding, languages — anything. With streaks, coins, heatmaps, charts, and deadlines to keep you moving.',
+  alternates: {
+    canonical: '/',
+  },
+  openGraph: {
+    title: 'Skill Tracker — Track every skill, build every habit',
+    description:
+      'Skill Tracker is a personal dashboard for tracking Quran, coding, languages — anything. With streaks, coins, heatmaps, charts, and deadlines.',
+    url: '/',
+    images: [
+      {
+        url: '/og-image.png',
+        width: 1200,
+        height: 630,
+        alt: 'Skill Tracker Dashboard Preview',
+      },
+    ],
+  },
+}
 
 export default async function LandingPage() {
   const supabase = await createClient()
@@ -30,7 +56,7 @@ export default async function LandingPage() {
           🔥 Build real habits. Track real progress.
         </div>
 
-        <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight leading-tight max-w-3xl animate-fade-in-up delay-300">
+        <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight leading-tight max-w-3xl animate-fade-in-up">
           Track every{' '}
           <span className="bg-gradient-to-r from-blue-400 to-emerald-400 bg-clip-text text-transparent">
             skill.
@@ -47,7 +73,7 @@ export default async function LandingPage() {
           With streaks, coins, heatmaps, charts, and deadlines to keep you moving.
         </p>
 
-        <div className="flex flex-col sm:flex-row items-center gap-4 mt-10 animate-fade-in-up delay-600">
+        <div className="flex flex-col sm:flex-row items-center gap-4 mt-10 animate-fade-in-up">
           <Link
             href="/login"
             className="bg-blue-500 hover:bg-blue-400 text-white font-bold text-base px-8 py-4 rounded-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-xl shadow-lg shadow-blue-500/25 active:scale-95"

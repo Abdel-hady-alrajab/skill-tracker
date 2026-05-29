@@ -104,6 +104,7 @@ export default function AddSkillModal({ isOpen, prefilledName, onClose, onAdd }:
                         </div>
                         <button
                             onClick={handleClose}
+                            aria-label="Close modal"
                             className="text-slate-500 hover:text-white text-xl leading-none p-1 transition-colors"
                         >
                             ✕
@@ -189,6 +190,8 @@ export default function AddSkillModal({ isOpen, prefilledName, onClose, onAdd }:
                                 <button
                                     key={c}
                                     onClick={() => setColor(c)}
+                                    aria-label={`Select ${c} color`}
+                                    aria-pressed={color === c}
                                     className={`w-7 h-7 rounded-full transition-all ${COLOR_SWATCHES[c]} ${color === c
                                         ? 'ring-2 ring-white ring-offset-2 ring-offset-slate-800 scale-110'
                                         : 'hover:scale-110'

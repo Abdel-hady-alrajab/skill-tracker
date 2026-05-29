@@ -8,9 +8,9 @@ export interface TodoSkill {
     created_at: string
 }
 
-export function useTodoSkills(userId: string) {
-    const [todos, setTodos] = useState<TodoSkill[]>([])
-    const [loading, setLoading] = useState(true)
+export function useTodoSkills(userId: string, initialTodos?: TodoSkill[]) {
+    const [todos, setTodos] = useState<TodoSkill[]>(initialTodos ?? [])
+    const [loading, setLoading] = useState(!initialTodos)
     const supabase = createClient()
 
     const fetchTodos = useCallback(async () => {
