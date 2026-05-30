@@ -10,17 +10,17 @@ import DayDetailModal from './DayDetailModal'
 export default function TimeStatsDashboard({ userId }: { userId: string }) {
     const { categoriesData, sessionsData } = useTimeTracker()
 
-    const { 
-        categories, 
-        addCategory, 
-        deleteCategory 
+    const {
+        categories,
+        addCategory,
+        deleteCategory
     } = categoriesData
 
-    const { 
-        activeSession, 
-        elapsedSeconds, 
-        startSession, 
-        stopSession, 
+    const {
+        activeSession,
+        elapsedSeconds,
+        startSession,
+        stopSession,
         getWeeklyBreakdown,
         getDailyBreakdown
     } = sessionsData
@@ -37,6 +37,9 @@ export default function TimeStatsDashboard({ userId }: { userId: string }) {
         const d = String(date.getDate()).padStart(2, '0')
         return `${y}-${m}-${d}`
     }
+
+    // 1. Extract a stable identifier for tracking state
+    const activeCategoryId = activeSession?.category_id || null
 
     useEffect(() => {
         const fetchChartData = async () => {
@@ -56,17 +59,19 @@ export default function TimeStatsDashboard({ userId }: { userId: string }) {
                     break
                 case 'prevMonth':
                     start = new Date(today.getFullYear(), today.getMonth() - 1, 1)
-                    end = new Date(today.getFullYear(), today.getMonth(), 0) // Last day of prev month
+                    end = new Date(today.getFullYear(), today.getMonth(), 0)
                     break
             }
 
-            const data = await getWeeklyBreakdown(formatDateStr(start), formatDateStr(end))
+            // FIX: Execute the fetch explicitly
+            const data = await sessionsData.getWeeklyBreakdown(formatDateStr(start), formatDateStr(end))
             setChartData(data)
         }
-        
+
         fetchChartData()
-        // Re-fetch when activeSession toggles (start/stop) to reflect the new tracked time in the chart
-    }, [period, activeSession, getWeeklyBreakdown])
+        // FIX: Remove getWeeklyBreakdown from the dependencies completely! 
+        // Now this only runs when the time selection changes, or a skill starts/stops.
+    }, [period, activeCategoryId])
 
     const handleDayClick = async (dateStr: string) => {
         const data = await getDailyBreakdown(dateStr)
@@ -76,7 +81,7 @@ export default function TimeStatsDashboard({ userId }: { userId: string }) {
 
     return (
         <div className="space-y-6">
-            <TimeTracker 
+            <TimeTracker
                 categories={categories}
                 activeSession={activeSession}
                 elapsedSeconds={elapsedSeconds}
@@ -103,11 +108,10 @@ export default function TimeStatsDashboard({ userId }: { userId: string }) {
                             <button
                                 key={tab.id}
                                 onClick={() => setPeriod(tab.id as any)}
-                                className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-all ${
-                                    period === tab.id 
-                                        ? 'bg-slate-700 text-white shadow-sm' 
-                                        : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'
-                                }`}
+                                className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-all ${period === tab.id
+                                    ? 'bg-slate-700 text-white shadow-sm'
+                                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'
+                                    }`}
                             >
                                 {tab.label}
                             </button>
@@ -120,7 +124,7 @@ export default function TimeStatsDashboard({ userId }: { userId: string }) {
                     {/* The TimeLineChart renders with a white background inside it, but we can wrap it */}
                     {/* We should also modify TimeLineChart slightly to adapt to dark mode but I'll let it be for now */}
                     <div className="dark-chart-wrapper">
-                        <TimeLineChart 
+                        <TimeLineChart
                             breakdown={chartData}
                             categories={categories}
                             onDayClick={handleDayClick}
@@ -129,7 +133,7 @@ export default function TimeStatsDashboard({ userId }: { userId: string }) {
                 </div>
             </div>
 
-            <DayDetailModal 
+            <DayDetailModal
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
                 dailyData={selectedDayData}

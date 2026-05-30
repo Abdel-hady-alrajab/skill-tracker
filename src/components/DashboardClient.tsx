@@ -36,7 +36,6 @@ const TimeStatsDashboard = dynamic(() => import('@/components/TimeStatsDashboard
     ssr: false
 })
 
-
 interface Props {
     userId: string
     initialSkills?: Skill[]
@@ -108,71 +107,7 @@ export default function DashboardClient({ userId, initialSkills, initialStats, i
     const [deadlines, setDeadlines] = useState<Record<string, string>>({})
     const [prevCounters, setPrevCounters] = useState<Record<string, number>>({})
     const [toast, setToast] = useState<string | null>(null)
-    const [importing, setImporting] = useState(false)
     const [prefilledName, setPrefilledName] = useState('')
-
-    // ── Legacy skills (pre-completed) ────────────────────────────────────
-    const LEGACY_SKILLS = [
-        { name: 'Tailwind', total: 100, unit: '%', color: 'teal' },
-        { name: 'CORS', total: 100, unit: '%', color: 'orange' },
-        { name: 'Task Runners', total: 100, unit: '%', color: 'red' },
-        { name: 'Webpack', total: 100, unit: '%', color: 'purple' },
-        { name: 'Jira', total: 100, unit: '%', color: 'blue' },
-        { name: 'Cypress Testing', total: 100, unit: '%', color: 'green' },
-        { name: 'TypeScript', total: 100, unit: '%', color: 'blue' },
-        { name: 'PWA', total: 100, unit: '%', color: 'pink' },
-        { name: 'Next.js', total: 100, unit: '%', color: 'teal' },
-        { name: 'Node', total: 100, unit: '%', color: 'green' },
-        { name: 'React Native', total: 100, unit: '%', color: 'purple' },
-        { name: 'Programming', total: 100, unit: '%', color: 'orange' },
-        { name: 'GTmetrix', total: 100, unit: '%', color: 'red' },
-        { name: 'Agile / Coursera', total: 100, unit: '%', color: 'blue' },
-        { name: 'Chrome DevTools', total: 100, unit: '%', color: 'teal' },
-        { name: 'Mock Interviews', total: 100, unit: '%', color: 'pink' },
-        { name: 'Material UI', total: 100, unit: '%', color: 'purple' },
-        { name: 'AI Tutorials', total: 100, unit: '%', color: 'green' },
-    ]
-
-    const alreadyImported = typeof window !== 'undefined'
-        && localStorage.getItem('legacy_skills_imported') === 'true'
-
-    const legacyNotYetAdded = !alreadyImported
-        && !loading
-        && !LEGACY_SKILLS.some(ls =>
-            skills.some(s => s.name.toLowerCase() === ls.name.toLowerCase())
-        )
-
-    async function importLegacySkills() {
-        setImporting(true)
-        const maxPos = skills.length > 0 ? Math.max(...skills.map(s => s.position)) : -1
-
-        for (let i = 0; i < LEGACY_SKILLS.length; i++) {
-            const ls = LEGACY_SKILLS[i]
-            const { data: inserted } = await supabase.from('skills').insert({
-                user_id: userId,
-                name: ls.name,
-                total: ls.total,
-                unit: ls.unit,
-                color: ls.color,
-                incs: [1],
-                has_custom: false,
-                position: maxPos + 1 + i,
-            }).select('id').single()
-
-            if (inserted) {
-                await supabase.from('skill_progress').insert({
-                    skill_id: inserted.id,
-                    counter: ls.total,
-                })
-            }
-        }
-
-        localStorage.setItem('legacy_skills_imported', 'true')
-        setImporting(false)
-        showToast('✅ Legacy skills imported!')
-        // Force a full refetch to show the new completed skills
-        window.location.reload()
-    }
 
     // Load deadlines from DB whenever skills list changes
     useEffect(() => {
@@ -381,15 +316,6 @@ export default function DashboardClient({ userId, initialSkills, initialStats, i
                 <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
                     <h1 className="text-base font-bold">Your Skills</h1>
                     <div className="flex items-center gap-2">
-                        {legacyNotYetAdded && (
-                            <button
-                                onClick={importLegacySkills}
-                                disabled={importing}
-                                className="bg-emerald-700 hover:bg-emerald-600 disabled:opacity-50 text-white text-xs font-bold px-4 py-2 rounded-lg transition-all active:scale-95 disabled:active:scale-100 duration-200"
-                            >
-                                {importing ? 'Importing…' : '📥 Import Previous Skills'}
-                            </button>
-                        )}
                         <button
                             onClick={() => setAddSkillOpen(true)}
                             className="bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold px-4 py-2 rounded-lg transition-all active:scale-95 disabled:active:scale-100 duration-200 hover:shadow-[0_0_12px_rgba(59,130,246,0.3)]"
@@ -468,11 +394,9 @@ export default function DashboardClient({ userId, initialSkills, initialStats, i
                     setPrefilledName('');
                 }}
                 onAdd={async (newSkill) => {
-                    // Explicitly handle the action so it returns Promise<void> matching your modal's expected type
                     const error = await addSkill(newSkill);
                     if (error) {
                         console.error("Failed to add skill:", error);
-                        // Optional: Handle your Supabase error here (e.g., toast notification)
                     }
                     setAddSkillOpen(false);
                 }}
@@ -497,3 +421,24 @@ export default function DashboardClient({ userId, initialSkills, initialStats, i
         </div>
     )
 }
+
+// const LEGACY_SKILLS = [
+//     { name: 'Tailwind', total: 100, unit: '%', color: 'teal' },
+//     { name: 'CORS', total: 100, unit: '%', color: 'orange' },
+//     { name: 'Task Runners', total: 100, unit: '%', color: 'red' },
+//     { name: 'Webpack', total: 100, unit: '%', color: 'purple' },
+//     { name: 'Jira', total: 100, unit: '%', color: 'blue' },
+//     { name: 'Cypress Testing', total: 100, unit: '%', color: 'green' },
+//     { name: 'TypeScript', total: 100, unit: '%', color: 'blue' },
+//     { name: 'PWA', total: 100, unit: '%', color: 'pink' },
+//     { name: 'Next.js', total: 100, unit: '%', color: 'teal' },
+//     { name: 'Node', total: 100, unit: '%', color: 'green' },
+//     { name: 'React Native', total: 100, unit: '%', color: 'purple' },
+//     { name: 'Programming', total: 100, unit: '%', color: 'orange' },
+//     { name: 'GTmetrix', total: 100, unit: '%', color: 'red' },
+//     { name: 'Agile / Coursera', total: 100, unit: '%', color: 'blue' },
+//     { name: 'Chrome DevTools', total: 100, unit: '%', color: 'teal' },
+//     { name: 'Mock Interviews', total: 100, unit: '%', color: 'pink' },
+//     { name: 'Material UI', total: 100, unit: '%', color: 'purple' },
+//     { name: 'AI Tutorials', total: 100, unit: '%', color: 'green' },
+// ]

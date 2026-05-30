@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect, useRef } from 'react'
+import React, { useEffect, useRef, memo } from 'react'
 import Chart from 'chart.js/auto'
 import { WeeklyBreakdown } from '@/app/hooks/useTimeSessions'
 import { TimeCategory } from '@/app/hooks/useTimeCategories'
@@ -11,7 +11,7 @@ interface TimeLineChartProps {
     onDayClick: (dateStr: string) => void
 }
 
-export default function TimeLineChart({ breakdown, categories, onDayClick }: TimeLineChartProps) {
+function TimeLineChartComponent({ breakdown, categories, onDayClick }: TimeLineChartProps) {
     const canvasRef = useRef<HTMLCanvasElement>(null)
     const chartRef = useRef<Chart | null>(null)
 
@@ -20,8 +20,6 @@ export default function TimeLineChart({ breakdown, categories, onDayClick }: Tim
 
         // Extract dates (X-axis)
         const labels = breakdown.map(d => {
-            // d.date is 'YYYY-MM-DD', but we must be careful with timezones.
-            // Using split prevents timezone shifting.
             const [y, m, day] = d.date.split('-').map(Number)
             const date = new Date(y, m - 1, day)
             return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
@@ -102,11 +100,10 @@ export default function TimeLineChart({ breakdown, categories, onDayClick }: Tim
                 plugins: {
                     tooltip: {
                         callbacks: {
-                            label: function(context) {
+                            label: function (context) {
                                 let label = context.dataset.label || ''
                                 if (label) label += ': '
                                 const value = context.raw as number
-                                // convert hours back to h/m
                                 const totalMins = Math.round(value * 60)
                                 const h = Math.floor(totalMins / 60)
                                 const m = totalMins % 60
@@ -125,7 +122,8 @@ export default function TimeLineChart({ breakdown, categories, onDayClick }: Tim
                 chartRef.current.destroy()
             }
         }
-    }, [breakdown, categories, onDayClick])
+        // FIX: Remove onDayClick from dependencies to prevent function reference instantiation loops
+    }, [breakdown, categories])
 
     return (
         <div className="relative w-full h-[400px] bg-white rounded-xl shadow-sm border border-slate-100 p-4">
@@ -139,3 +137,16 @@ export default function TimeLineChart({ breakdown, categories, onDayClick }: Tim
         </div>
     )
 }
+
+// FIX: Wrap inside a memoized guard layer to structurally compare properties
+export default memo(TimeLineChartComponent, (prevProps, nextProps) => {
+    // If category list metadata configuration shifts lengths, redraw
+    if (prevProps.categories.length !== nextProps.categories.length) return false
+
+    // Deep trace comparison of metrics matching across timestamps
+    const prevDataString = JSON.stringify(prevProps.breakdown)
+    const nextDataString = JSON.stringify(nextProps.breakdown)
+
+    // True means skip rendering entirely because data values match
+    return prevDataString === nextDataString
+})
